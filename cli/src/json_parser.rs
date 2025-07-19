@@ -1,19 +1,17 @@
-use crate::github_api;
-use std::task::Context;
-
 use serde::{Deserialize, Serialize};
+use std::path::Path;
 
 //struct for payload that we use for AI api later
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Payload {
-    user_id: String,
-    read_me: String,
-    source_files: Vec<SourceFile>,
-    test_results: String,
+    pub user_id: String,
+    pub read_me: String,
+    pub source_files: Vec<SourceFile>,
+    pub test_results: String,
 }
 
 //struct for students' files
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct SourceFile {
     filename: String,
     content: String,
@@ -33,12 +31,12 @@ pub fn parse_payload(
         user_id: user_id.to_string(),
         read_me: read_me_json,
         source_files,
-        test_results: test_results_json,
+        test_results: test_result_json,
     };
     // 2. Serialize to JSON string
     let json_string = serde_json::to_string(&payload)?;
     // 3. Return JSON string
-    Ok(json_string);
+    Ok(json_string)
 }
 
 pub fn parse_source_file(
