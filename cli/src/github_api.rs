@@ -1,21 +1,19 @@
-use crate::json_parser;
-use crate::json_parser::parse_payload;
-use crate::json_parser::SourceFile;
-use git2::{Repository, build::RepoBuilder};
+use git2::Repository;
 use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
-use std::fs::copy;
 use std::process::Command;
-use std::fs::read_dir;
+
+//WE NEED ADD EXEPTION FOR THE TASK 13 BECAUSE OF NEWSFEED DIR
 
 //IMPORTANT!!! ADD AS A COMMAND TO CLI!!!!
 //Clones students' repos. Students' names from txt file and gets task number as input
 // Also transform them into JSON format. Maybe find a better way to do it later??
 //OBS! CLONES INTO CURRENT DIR!
+// Should create a json with the paths to the directories of students(maybe)??
 pub fn clone_repos(students: Vec<String>, task: String) -> Result<(), Box<dyn std::error::Error>> {
     // Get current working directory
-    let base_path = std::env::current_dir()?;
+    let current_dir = std::env::current_dir()?;
     // Create ./task directory
     let repos_dir = current_dir.join(&task);
     std::fs::create_dir_all(&repos_dir)?;
@@ -29,21 +27,8 @@ pub fn clone_repos(students: Vec<String>, task: String) -> Result<(), Box<dyn st
             Ok(_) => println!("Cloned {} to {:?}", student_url, student_dir),
             Err(e) => eprintln!("Failed to clone{}: {}", student_url, e),
         };
-        let src_dir = student_dir.join("src");
-        let (all_file_paths, all_file_names) = transform_contents(src_dir, "java")?;
-        let mut all_source_files = Vec<SourceFile>::new();
-        for (file_path, file_name) in all_file_paths.iter().zip(all_file_names.iter()) {
-            match json_parser::parse_source_file(file_name, file_path) {
-                Ok(source_file) => all_source_files.push(source_file),
-                Err(e) => eprintln!("Failed to parse {}: {}", file_name, e),
-            }
-        }
-        //Run java tests here
-        let test_result = "True";
-        let read_me_path = student_dir.join("README.md");
-        let json_payload = parse_payload(student, read_me_path, all_source_files, test_results);
     }
-    Ok(());
+    Ok(())
 }
 
 //Function to transform student's task/homework into format for JSON parsing.
@@ -57,13 +42,13 @@ pub fn transform_contents(
     for file in fs::read_dir(repo_dir)? {
         let file = file?;
         let file_path = file.path();
-        if file_path.is_file() && file_path.extension().map_or(false, |ext| ext = extension) {
-            let file_name = file_path
+        if file_path.is_file() && file_path.extension().map_or(false, |ext| ext == extension) {
+            let file_name = file_path //maybe redo this cause it AI slop??
                 .file_name()
                 .unwrap() // safe if you know it's a file
                 .to_string_lossy()
                 .to_string();
-            if (!file_name.contains("Test")) {
+            if !file_name.contains("Test") {
                 files.push(file_path);
                 names.push(file_name);
             }
@@ -71,6 +56,8 @@ pub fn transform_contents(
     }
     Ok((files, names))
 }
+
+pub fn parse_contents() {}
 
 //IMPORTANT!!! ADD AS A COMMAND TO CLI!!!!
 //Clones tests for tasks from inda-master org. OBS! CLONES INTO CURRET DIR!
@@ -92,6 +79,54 @@ pub fn get_tests() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-pub fn run_java_tests(students_repo: &Path, tests_dir: &Path)-> Result<String, Box<dyn std::error::Error>> {
+pub fn run_java_tests(
+    students_repo: &Path,
+    tests_dir: &Path,
+    jars_dir: &Path,
+) -> Result<String, Box<dyn std::error::Error>> {
+    //1. Copy the tests from the directory and jars files
+    let mut junit_jar;
+    let mut hamcrest_jar;
+    for file in fs::read_dir(tests_dir)? {
+        let file = file?;
+        let path = file.path();
+        fs::copy(path, students_repo); //copy into src FIXXX
+    }
+    for file in fs::read_dir(jars_dir)? {
+        let file = file?;
+        let path = file.path();
+        fs::copy(path, students_repo); //copy into src FIXXX
+        let class_name = path.to_string_lossy();
+        if class_name.contains("junit") {
+            junit_jar = path;
+        } else {
+            hamcrest_jar = path;
+        }
+    }
+    //2. Compile all the java files
 
+    let test_classes = find_test_classes(students_repo.join("tests"))?; //add src here
+    //3. Compile java files and run each test
+
+    //4. Collect the results.
+
+    //5. Return them or create json file
+    Ok(())
+}
+
+//
+fn find_test_classes(students_repo: PathBuf) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    let mut test_names = Vec::new();
+    for file in fs::read_dir(students_repo)? {
+        let file = file?;
+        let path = file.path();
+        if path.is_file() {
+            let filename = path.to_string_lossy();
+            if filename.ends_with("Test.java") {
+                let class_name = filename.trim_end_matches("java").to_string();
+                test_names.push(class_name);
+            }
+        }
+    }
+    Ok(test_names)
 }
