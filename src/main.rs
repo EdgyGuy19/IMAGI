@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
 
-use crate::github_api::{clone_repos, create_payload, get_tests};
+use crate::github_api::{clone_repos, create_payload, get_tests, print_test_results};
 
 #[derive(Parser)]
 #[command(
@@ -77,6 +77,10 @@ enum Commands {
         #[arg(long)]
         jars: PathBuf,
     },
+    Results {
+        #[arg(long)]
+        json: PathBuf,
+    },
     //Grade {json_dir: PathBuf, github_token: String}, idk about that one yet
 }
 
@@ -115,6 +119,14 @@ fn main() {
             ) {
                 eprintln!(
                     "Error while compiling or running the java tests or parsing the students' results: {}",
+                    e
+                );
+            }
+        }
+        Commands::Results { json } => {
+            if let Err(e) = print_test_results(json.to_path_buf()) {
+                eprint!(
+                    "Error while getting the json file/dir or while printing test results: {}",
                     e
                 );
             }
