@@ -152,10 +152,12 @@ fn find_test_classes(students_repo: PathBuf) -> Result<Vec<String>, Box<dyn std:
         let file = file?;
         let path = file.path();
         if path.is_file() {
-            let filename = path.to_string_lossy();
-            if filename.ends_with("Test.java") {
-                let class_name = filename.trim_end_matches(".java").to_string();
-                test_names.push(class_name);
+            if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
+                if filename.ends_with("Test.java") || filename.ends_with("Tests.java") {
+                    // Remove .java extension to get the class name
+                    let class_name = filename.trim_end_matches(".java").to_string();
+                    test_names.push(class_name);
+                }
             }
         }
     }
@@ -247,5 +249,47 @@ pub fn run_java_tests(
     Ok(format!("{}\n{}", stdout, stderr))
 }
 
-//take 1 student path to json and print test results
-pub fn print_test_results() {}
+// Print only the test_results field from JSON file(s) with clear terminal output.
+pub fn print_test_results(json_path: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    use serde_json::Value;
+    use std::fs;
+    use std::path::Path;
+
+    fn print_test_result_from_file(path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+        let data = fs::read_to_string(path)?;
+        let v: Value = serde_json::from_str(&data)?;
+        let test_results = v
+            .get("test_results")
+            .and_then(|tr| tr.as_str())
+            .unwrap_or("<no test_results field>");
+        println!("\x1b[1;34mFile: {}\x1b[0m", path.display());
+        println!("\x1b[1;32mTest Results:\x1b[0m\n{}", test_results.trim());
+        Ok(())
+    }
+
+    if json_path.is_file() {
+        print_test_result_from_file(&json_path)?;
+    } else if json_path.is_dir() {
+        let mut files: Vec<_> = fs::read_dir(&json_path)?
+            .filter_map(|entry| {
+                let entry = entry.ok()?;
+                let path = entry.path();
+                if path.is_file() && path.extension().map(|e| e == "json").unwrap_or(false) {
+                    Some(path)
+                } else {
+                    None
+                }
+            })
+            .collect();
+        files.sort();
+        for file in files {
+            print_test_result_from_file(&file)?;
+            println!("{}", "-".repeat(60));
+        }
+    } else {
+        eprintln!("Path does not exist: {}", json_path.display());
+    }
+    Ok(())
+}
+
+pub fn send_payload() {}
