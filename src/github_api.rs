@@ -8,6 +8,9 @@ use std::io::BufRead;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
+use std::process::Stdio;
+use std::thread::sleep;
+use std::time::Duration;
 
 //check single student??
 //find research about grading with AI or sum like that
@@ -186,7 +189,7 @@ pub fn run_java_tests(
 
     if !test_files_to_move.is_empty() {
         let student_tests_dir = students_src.join("student_tests");
-        fs::create_dir(&student_tests_dir)?;
+        fs::create_dir_all(&student_tests_dir)?;
         for (path, name) in test_files_to_move {
             let dest = student_tests_dir.join(name);
             fs::rename(&path, &dest)?;
@@ -292,4 +295,27 @@ pub fn print_test_results(json_path: PathBuf) -> Result<(), Box<dyn std::error::
     Ok(())
 }
 
-pub fn send_payload() {}
+pub async fn send_payload(json_dir: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    // 1. Start the API server in background
+
+    // 2. Wait a moment to let the server boot
+    sleep(Duration::from_secs(2));
+
+    let api = reqwest::Client::new();
+    let map: HashMap<String, String> = HashMap::new();
+    for file in fs::read_dir(json_dir)? {
+        let file = file?;
+        let path = file.path();
+        if path.is_file() {
+            let content = fs::read_to_string(path)?; //basic post request
+            let post = api
+                .post("http://127.0.0.1:8000/grade") // http://127.0.0.1:8000/docs to check the server
+                .form(&content)
+                .send()
+                .await?;
+        }
+        //use feedback struct and write to the system as well
+    }
+
+    Ok(())
+}

@@ -17,6 +17,13 @@ pub struct SourceFile {
     content: String,
 }
 
+#[derive(Deserialize, Debug)]
+pub struct FeedbackEntry {
+    student_id: String,
+    status: String,
+    feedback: String,
+}
+
 pub fn create_payload_json(
     user_id: String,
     read_me: String,
