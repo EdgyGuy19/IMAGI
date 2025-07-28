@@ -184,6 +184,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+ "thread",
  "tokio",
 ]
 
@@ -1170,6 +1171,12 @@ dependencies = [
  "rustix",
  "windows-sys 0.59.0",
 ]
+
+[[package]]
+name = "thread"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f06beb703bd1c46f3cc8afdf4e3d0f932ec413289204f9f74715023da8acb5f"
 
 [[package]]
 name = "tinystr"
