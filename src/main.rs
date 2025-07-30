@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
 
-use crate::github_api::{clone_repos, create_payload, get_tests, print_test_results};
+use crate::github_api::{clone_repos, create_payload, get_tests, print_test_results, send_payload};
 
 #[derive(Parser)]
 #[command(
@@ -81,10 +81,16 @@ enum Commands {
         #[arg(long)]
         json: PathBuf,
     },
-    //Grade {json_dir: PathBuf, github_token: String}, idk about that one yet
+    Grade {
+        #[arg(long)]
+        json: PathBuf,
+        #[arg(long)]
+        output: PathBuf,
+    },
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let cli = Cli::parse();
     match &cli.command {
         Commands::Tests { output } => {
@@ -129,6 +135,11 @@ fn main() {
                     "Error while getting the json file/dir or while printing test results: {}",
                     e
                 );
+            }
+        }
+        Commands::Grade { json, output } => {
+            if let Err(e) = send_payload(json.to_path_buf(), output.to_path_buf()).await {
+                eprint!("Error while grading the students: {}", e);
             }
         }
     }
