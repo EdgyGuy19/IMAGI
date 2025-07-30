@@ -17,11 +17,27 @@ pub struct SourceFile {
     content: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct FeedbackEntry {
     student_id: String,
     status: String,
     feedback: String,
+}
+
+pub fn create_feedback_json(
+    student_id: String,
+    status: String,
+    feedback: String,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let feedback = FeedbackEntry {
+        student_id,
+        status,
+        feedback,
+    };
+
+    let json_string = serde_json::to_string(&feedback)?;
+
+    Ok(json_string)
 }
 
 pub fn create_payload_json(

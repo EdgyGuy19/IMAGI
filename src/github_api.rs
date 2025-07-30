@@ -1,6 +1,8 @@
 use crate::json_parser::SourceFile;
+use crate::json_parser::create_feedback_json;
 use crate::json_parser::create_payload_json;
 use crate::json_parser::parse_source_file;
+use reqwest::Client;
 use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
@@ -8,8 +10,6 @@ use std::io::BufRead;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
-use std::process::Stdio;
-use std::thread::sleep;
 use std::time::Duration;
 
 //check single student??
@@ -295,14 +295,19 @@ pub fn print_test_results(json_path: PathBuf) -> Result<(), Box<dyn std::error::
     Ok(())
 }
 
-pub async fn send_payload(json_dir: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn send_payload(
+    json_dir: PathBuf,
+    output_dir: PathBuf,
+) -> Result<(), Box<dyn std::error::Error>> {
     // 1. Start the API server in background
 
+    fs::create_dir_all(&output_dir)?;
+    let mut server = Command::new("uvicorn").arg("AI_api.api:app").spawn()?;
+
     // 2. Wait a moment to let the server boot
-    sleep(Duration::from_secs(2));
+    wait_for_server_ready().await;
 
     let api = reqwest::Client::new();
-    let map: HashMap<String, String> = HashMap::new();
     for file in fs::read_dir(json_dir)? {
         let file = file?;
         let path = file.path();
@@ -310,12 +315,48 @@ pub async fn send_payload(json_dir: PathBuf) -> Result<(), Box<dyn std::error::E
             let content = fs::read_to_string(path)?; //basic post request
             let post = api
                 .post("http://127.0.0.1:8000/grade") // http://127.0.0.1:8000/docs to check the server
-                .form(&content)
+                .header("Content-Type", "application/json")
+                .body(content)
                 .send()
                 .await?;
-        }
-        //use feedback struct and write to the system as well
-    }
 
+            if post.status().is_success() {
+                let feedback: serde_json::Value = post.json().await?;
+                let student_id = feedback["student_id"].as_str().unwrap_or("");
+                let status = feedback["status"].as_str().unwrap_or("");
+                let ai_feedback = feedback["feedback"].as_str().unwrap_or("");
+                let feedback_json = create_feedback_json(
+                    student_id.to_string(),
+                    status.to_string(),
+                    ai_feedback.to_string(),
+                )?;
+                let json_path_name = format!("{}_feedback.json", student_id);
+                let json_path = output_dir.join(json_path_name);
+                std::fs::write(json_path, feedback_json)?;
+            } else {
+                let err_text = post.text().await?;
+                eprintln!("Error: {}", err_text);
+            }
+        }
+    }
+    server.kill()?; // After grading is done
     Ok(())
+}
+
+async fn wait_for_server_ready() {
+    let client = Client::new();
+    for _ in 0..30 {
+        // Try for up to 30 seconds
+        match client.get("http://127.0.0.1:8000/docs").send().await {
+            Ok(resp) if resp.status().is_success() => {
+                println!("Server is ready!");
+                return;
+            }
+            _ => {
+                println!("Waiting for server...");
+                tokio::time::sleep(Duration::from_secs(1)).await;
+            }
+        }
+    }
+    panic!("Server did not start in time!");
 }
