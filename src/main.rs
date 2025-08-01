@@ -74,8 +74,6 @@ enum Commands {
         output: PathBuf,
         #[arg(long)]
         tests: PathBuf,
-        #[arg(long)]
-        jars: PathBuf,
     },
     Results {
         #[arg(long)]
@@ -115,13 +113,11 @@ async fn main() {
             json,
             output,
             tests,
-            jars,
         } => {
             if let Err(e) = create_payload(
                 json.to_path_buf(),
                 output.to_path_buf(),
                 tests.to_path_buf(),
-                jars.to_path_buf(),
             ) {
                 eprintln!(
                     "Error while compiling or running the java tests or parsing the students' results: {}",

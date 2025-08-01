@@ -1,9 +1,15 @@
 use crate::json_parser::SourceFile;
 use crate::json_parser::create_feedback_json;
+use crate::json_parser::create_issue;
 use crate::json_parser::create_payload_json;
 use crate::json_parser::parse_source_file;
 use reqwest::Client;
+use reqwest::header::AUTHORIZATION;
+use reqwest::header::HeaderMap;
+use reqwest::header::HeaderValue;
+use reqwest::header::USER_AGENT;
 use std::collections::HashMap;
+use std::env;
 use std::fs;
 use std::fs::File;
 use std::io::BufRead;
@@ -119,29 +125,41 @@ pub fn create_payload(
     students_repo: PathBuf,
     path_to_task_dir: PathBuf,
     tests_dir: PathBuf,
-    jars_dir: PathBuf,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let json_string = fs::read_to_string(students_repo)?;
     let mut readme = String::new();
+    let mut task = String::new();
     let map: HashMap<String, PathBuf> = serde_json::from_str(&json_string)?;
     if let Some(val) = map.values().next() {
         let mut readme_path = val.clone(); // val: &PathBuf
         readme_path.pop(); // removes "src"
         readme_path.push("README.md");
         readme = std::fs::read_to_string(&readme_path)?;
+        readme_path.pop(); // remove readme path
+        readme_path.pop(); //get task number;
+        task = readme_path
+            .file_name()
+            .and_then(|os_str| os_str.to_str())
+            .unwrap_or("")
+            .to_string();
     }
     let dir_path = path_to_task_dir.join("json_files");
     std::fs::create_dir_all(&dir_path)?;
     for (key, value) in &map {
         let mut source_files: Vec<SourceFile> = Vec::new();
         let (paths, names) = transform_contents(value)?;
-        let test_results = run_java_tests(value.as_path(), &tests_dir, &jars_dir)?;
+        let test_results = run_java_tests(value.as_path(), &tests_dir)?;
         for (name, path) in names.iter().zip(paths.iter()) {
             let source_file = parse_source_file(name, path)?;
             source_files.push(source_file);
         }
-        let payload =
-            create_payload_json(key.to_string(), readme.clone(), source_files, test_results)?;
+        let payload = create_payload_json(
+            key.to_string(),
+            task.clone(),
+            readme.clone(),
+            source_files,
+            test_results,
+        )?;
         let json_path_name = format!("{}.json", key);
         let json_path = dir_path.join(json_path_name);
         std::fs::write(json_path, payload)?;
@@ -170,10 +188,10 @@ fn find_test_classes(students_repo: PathBuf) -> Result<Vec<String>, Box<dyn std:
 pub fn run_java_tests(
     students_src: &Path,
     tests_dir: &Path,
-    jars_dir: &Path,
 ) -> Result<String, Box<dyn std::error::Error>> {
     // 1. Move any pre-existing student test files to student_tests/
     let mut test_files_to_move = Vec::new();
+    let jars_dir = env::var("AI_GRADER_JARS_DIR").expect("Set the JARS_DIR environment variable");
 
     for entry in fs::read_dir(students_src)? {
         let entry = entry?;
@@ -300,7 +318,6 @@ pub async fn send_payload(
     output_dir: PathBuf,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // 1. Start the API server in background
-
     fs::create_dir_all(&output_dir)?;
     let mut server = Command::new("uvicorn").arg("AI_api.api:app").spawn()?;
 
@@ -323,6 +340,7 @@ pub async fn send_payload(
             if post.status().is_success() {
                 let feedback: serde_json::Value = post.json().await?;
                 let student_id = feedback["student_id"].as_str().unwrap_or("");
+                let task = feedback["task"].as_str().unwrap_or("");
                 let status = feedback["status"].as_str().unwrap_or("");
                 let ai_feedback = feedback["feedback"].as_str().unwrap_or("");
                 let feedback_json = create_feedback_json(
@@ -332,7 +350,14 @@ pub async fn send_payload(
                 )?;
                 let json_path_name = format!("{}_feedback.json", student_id);
                 let json_path = output_dir.join(json_path_name);
-                std::fs::write(json_path, feedback_json)?;
+                fs::write(json_path, feedback_json)?;
+                send_issue(
+                    task.to_string(),
+                    student_id.to_string(),
+                    status.to_string(),
+                    ai_feedback.to_string(),
+                )
+                .await?;
             } else {
                 let err_text = post.text().await?;
                 eprintln!("Error: {}", err_text);
@@ -340,6 +365,46 @@ pub async fn send_payload(
         }
     }
     server.kill()?; // After grading is done
+    Ok(())
+}
+
+async fn send_issue(
+    task: String,
+    student: String,
+    status: String,
+    feedback: String,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let token = env::var("GITHUB_TOKEN").expect("Set the GITHUB_TOKEN environment variable");
+    let org = "inda-24";
+    let repo = format!("{}-{}", student, task);
+    let url = format!(
+        "https://gits-15.sys.kth.se/api/v3/repos/{}/{}/issues",
+        org, repo
+    );
+
+    let issue = create_issue(status, feedback);
+    let mut headers = HeaderMap::new();
+
+    headers.insert(USER_AGENT, HeaderValue::from_static("AI-Grader"));
+    headers.insert(
+        AUTHORIZATION,
+        HeaderValue::from_str(&format!("token {}", token))?,
+    );
+
+    let client = reqwest::Client::new();
+    let res = client
+        .post(&url)
+        .headers(headers)
+        .json(&issue)
+        .send()
+        .await?;
+
+    if res.status().is_success() {
+        println!("✅ Issue created successfully!");
+    } else {
+        println!("❌ Failed to create issue: {:?}", res.text().await?);
+    }
+
     Ok(())
 }
 
