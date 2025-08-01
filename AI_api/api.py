@@ -10,6 +10,7 @@ class SourceFile(BaseModel):
 
 class ReceivedPayload(BaseModel):
     user_id: str
+    task: str
     read_me: str
     source_files: list[SourceFile]
     test_results: str
@@ -56,6 +57,7 @@ async def grade(request: ReceivedPayload):
         Do not state exactly what the issue is or how to fix it.
         Instead, ask guiding questions that encourage the student to reflect on their code’s behavior and discover the issue themselves.
         Do not give away the solution. Your role is purely pedagogical.
+        You can use emojis.
 
         Your feedback must follow this format:
         Pass/Fail (depending on the test results and your judgment)
@@ -84,7 +86,7 @@ async def grade(request: ReceivedPayload):
         status, content = feedback.split(":", 1)
         status = status.strip()
 
-        json_string = {"student_id": request.user_id, "status": status, "feedback": content}
+        json_string = {"student_id": request.user_id, "task": request.task, "status": status, "feedback": content}
         return json_string
 
     except HTTPException as e:

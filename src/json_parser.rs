@@ -4,10 +4,11 @@ use std::path::Path;
 //struct for payload that we use for AI api later
 #[derive(Serialize, Deserialize)]
 pub struct Payload {
-    pub user_id: String,
-    pub read_me: String,
-    pub source_files: Vec<SourceFile>,
-    pub test_results: String,
+    user_id: String,
+    task: String,
+    read_me: String,
+    source_files: Vec<SourceFile>,
+    test_results: String,
 }
 
 //struct for students' files
@@ -22,6 +23,16 @@ pub struct FeedbackEntry {
     student_id: String,
     status: String,
     feedback: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Issue {
+    title: String,
+    body: String,
+}
+
+pub fn create_issue(title: String, body: String) -> Issue {
+    Issue { title, body }
 }
 
 pub fn create_feedback_json(
@@ -42,6 +53,7 @@ pub fn create_feedback_json(
 
 pub fn create_payload_json(
     user_id: String,
+    task: String,
     read_me: String,
     source_files: Vec<SourceFile>,
     test_results: String,
@@ -50,6 +62,7 @@ pub fn create_payload_json(
 
     let payload = Payload {
         user_id,
+        task,
         read_me,
         source_files,
         test_results,
