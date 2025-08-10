@@ -18,6 +18,7 @@ pub struct SourceFile {
     content: String,
 }
 
+//struct for ai grading
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FeedbackEntry {
     student_id: String,
@@ -25,11 +26,14 @@ pub struct FeedbackEntry {
     feedback: String,
 }
 
+//struct for sending github issue
 #[derive(Serialize, Deserialize)]
 pub struct Issue {
     title: String,
     body: String,
 }
+
+//Functions for creating our structs and parsing to JSON
 
 pub fn create_issue(title: String, body: String) -> Issue {
     Issue { title, body }
@@ -58,8 +62,6 @@ pub fn create_payload_json(
     source_files: Vec<SourceFile>,
     test_results: String,
 ) -> Result<String, Box<dyn std::error::Error>> {
-    // 1. Build Payload struct
-
     let payload = Payload {
         user_id,
         task,
@@ -67,9 +69,9 @@ pub fn create_payload_json(
         source_files,
         test_results,
     };
-    // 2. Serialize to JSON string
+
     let json_string = serde_json::to_string(&payload)?;
-    // 3. Return JSON string
+
     Ok(json_string)
 }
 
