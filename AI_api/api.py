@@ -4,6 +4,7 @@ from pydantic import BaseModel
 import openai
 import os
 
+#Same structs as for rust
 class SourceFile(BaseModel):
       filename: str
       content: str
@@ -15,12 +16,14 @@ class ReceivedPayload(BaseModel):
     source_files: list[SourceFile]
     test_results: str
 
+#Setting up api key(environment variable)
 api_key = os.getenv("GRADER_OPENAI_API_KEY")
 if not api_key:
     raise RuntimeError("Missing OPENAI_API_KEY")
 
 app = FastAPI()
 
+#Error handling
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
@@ -28,6 +31,7 @@ async def generic_exception_handler(request: Request, exc: Exception):
         content={"detail": f"Internal server error: {str(exc)}"}
     )
 
+#Main script for receiving requests, grading and sending back
 @app.post("/grade")
 async def grade(request: ReceivedPayload):
     try:

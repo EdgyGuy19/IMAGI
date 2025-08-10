@@ -4,7 +4,9 @@ use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
 
-use crate::github_api::{clone_repos, create_payload, get_tests, print_test_results, send_payload};
+use crate::github_api::{
+    clone_repos, create_payload, get_tests, print_feedback, print_test_results, send_payload,
+};
 
 #[derive(Parser)]
 #[command(
@@ -13,10 +15,13 @@ use crate::github_api::{clone_repos, create_payload, get_tests, print_test_resul
     long_about = "🦀 Rust Grader CLI\n\
     \n\
     Available commands:\n\
-      help    - Show this help message.\n\
-      clone   - Clone student repositories into a specified output directory and create a JSON file with src paths.\n\
-      tests   - Clone all solution repos from inda-master into a specified output directory.\n\
-      java    - Compile and test all student Java files, collect results, and create JSON payloads.\n\
+      help      - Show this help message.\n\
+      clone     - Clone student repositories into a specified output directory and create a JSON file with src paths.\n\
+      tests     - Clone all solution repos from inda-master into a specified output directory.\n\
+      java      - Compile and test all student Java files, collect results, and create JSON payloads.\n\
+      results   - Print test results from JSON file(s) in a clear terminal format.\n\
+      grade     - Send JSON payloads to the Python AI API for grading and post feedback to GitHub.\n\
+      feedback  - Print AI-generated feedback from JSON file(s) in a clear terminal format.\n\
     \n\
     USAGE EXAMPLES:\n\
       grader help\n\
@@ -43,10 +48,20 @@ use crate::github_api::{clone_repos, create_payload, get_tests, print_test_resul
                       --tests /home/inda-master/task-5/src \\\n\
                       --jars /home/inda-master/jars\n\
     \n\
+      grader results --json <path-to-json-or-dir>\n\
+        Print test results from a JSON file or directory in a readable format.\n\
+    \n\
+      grader grade --json <json-dir> --output <output-dir>\n\
+        Send JSON payloads to the Python AI API for grading and post feedback to GitHub.\n\
+    \n\
+      grader feedback --json <path-to-feedback-json-or-dir>\n\
+        Print AI-generated feedback from a JSON file or directory in a readable format.\n\
+    \n\
     Notes:\n\
       - All commands that clone or generate files require an explicit --output directory.\n\
       - Output directories will be created automatically if they do not exist.\n\
-      - The 'grade' command is planned for future integration with the Python AI API and GitHub feedback.\n"
+      - The 'grade' command integrates with the Python AI API and posts feedback to GitHub issues.\n\
+      - The 'feedback' command displays concise, AI-generated feedback for each student.\n"
 )]
 struct Cli {
     #[command(subcommand)]
@@ -84,6 +99,10 @@ enum Commands {
         json: PathBuf,
         #[arg(long)]
         output: PathBuf,
+    },
+    Feedback {
+        #[arg(long)]
+        json: PathBuf,
     },
 }
 
@@ -136,6 +155,14 @@ async fn main() {
         Commands::Grade { json, output } => {
             if let Err(e) = send_payload(json.to_path_buf(), output.to_path_buf()).await {
                 eprint!("Error while grading the students: {}", e);
+            }
+        }
+        Commands::Feedback { json } => {
+            if let Err(e) = print_feedback(json.to_path_buf()) {
+                eprint!(
+                    "Error while getting the json file/dir or while printing the feedback: {}",
+                    e
+                );
             }
         }
     }

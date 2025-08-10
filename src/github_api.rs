@@ -18,17 +18,7 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::time::Duration;
 
-//check single student??
-//find research about grading with AI or sum like that
-//ask about docs? Need to make another function and modifications? Ask students to always write in README instead?
-//
-//WE NEED ADD EXEPTION FOR THE TASK 13 BECAUSE OF NEWSFEED DIR OR ASK STUDENT TO REDO THE DIRS FROM NEWSFEED INTO SRC
-
-//IMPORTANT!!! ADD AS A COMMAND TO CLI!!!!
-//Clones students' repos. Students' names from txt file and gets task number as input
-// Also transform them into JSON format. Maybe find a better way to do it later??
-//OBS! CLONES INTO CURRENT DIR!
-// Should create a json with the paths to the directories of students(maybe)??
+//clones students repos and creates json files with paths to their src dirs.
 pub fn clone_repos(
     students: PathBuf,
     task: String,
@@ -70,7 +60,7 @@ pub fn clone_repos(
 }
 
 //Function to transform student's task/homework into format for JSON parsing.
-//Gets called when we transoform payload to JSON.
+//Gets called when we create payload for api.
 pub fn transform_contents(
     repo_dir: &Path,
 ) -> Result<(Vec<PathBuf>, Vec<String>), Box<dyn std::error::Error>> {
@@ -91,8 +81,7 @@ pub fn transform_contents(
     Ok((files, names))
 }
 
-//IMPORTANT!!! ADD AS A COMMAND TO CLI!!!!
-//Clones tests for tasks from inda-master org. OBS! CLONES INTO CURRET DIR!
+//Clones tests for tasks from inda-master org.
 pub fn get_tests(output_dir: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     let basic_url = "git@gits-15.sys.kth.se:inda-master/{task}.git";
 
@@ -120,7 +109,7 @@ pub fn get_tests(output_dir: PathBuf) -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
-//somehow add readme here
+//creating payload from repo
 pub fn create_payload(
     students_repo: PathBuf,
     path_to_task_dir: PathBuf,
@@ -167,6 +156,7 @@ pub fn create_payload(
     Ok(())
 }
 
+//used to get names for test files
 fn find_test_classes(students_repo: PathBuf) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let mut test_names = Vec::new();
     for file in fs::read_dir(students_repo)? {
@@ -185,6 +175,7 @@ fn find_test_classes(students_repo: PathBuf) -> Result<Vec<String>, Box<dyn std:
     Ok(test_names)
 }
 
+//function that runs java commands, copies jars and test files to students repos, and moves their own made tests
 pub fn run_java_tests(
     students_src: &Path,
     tests_dir: &Path,
@@ -313,6 +304,60 @@ pub fn print_test_results(json_path: PathBuf) -> Result<(), Box<dyn std::error::
     Ok(())
 }
 
+// Print only the feedback fields from JSON file(s) with clear terminal output.
+pub fn print_feedback(json_path: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    use serde_json::Value;
+    use std::fs;
+    use std::path::Path;
+
+    fn print_feedback_from_file(path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+        let data = fs::read_to_string(path)?;
+        let v: Value = serde_json::from_str(&data)?;
+        let student_id = v
+            .get("student_id")
+            .and_then(|id| id.as_str())
+            .unwrap_or("<no student_id>");
+        let status = v
+            .get("status")
+            .and_then(|s| s.as_str())
+            .unwrap_or("<no status>");
+        let feedback = v
+            .get("feedback")
+            .and_then(|f| f.as_str())
+            .unwrap_or("<no feedback>");
+        println!("\x1b[1;34mFile: {}\x1b[0m", path.display());
+        println!("\x1b[1;33mStudent ID:\x1b[0m {}", student_id);
+        println!("\x1b[1;32mStatus:\x1b[0m {}", status);
+        println!("\x1b[1;36mFeedback:\x1b[0m\n{}", feedback.trim());
+        Ok(())
+    }
+
+    if json_path.is_file() {
+        print_feedback_from_file(&json_path)?;
+    } else if json_path.is_dir() {
+        let mut files: Vec<_> = fs::read_dir(&json_path)?
+            .filter_map(|entry| {
+                let entry = entry.ok()?;
+                let path = entry.path();
+                if path.is_file() && path.extension().map(|e| e == "json").unwrap_or(false) {
+                    Some(path)
+                } else {
+                    None
+                }
+            })
+            .collect();
+        files.sort();
+        for file in files {
+            print_feedback_from_file(&file)?;
+            println!("{}", "-".repeat(60));
+        }
+    } else {
+        eprintln!("Path does not exist: {}", json_path.display());
+    }
+    Ok(())
+}
+
+//sending payload to the AI-api. Receiving back the graded feedback as well
 pub async fn send_payload(
     json_dir: PathBuf,
     output_dir: PathBuf,
@@ -368,6 +413,7 @@ pub async fn send_payload(
     Ok(())
 }
 
+//function to create github issue with the AI feedback
 async fn send_issue(
     task: String,
     student: String,
@@ -408,6 +454,7 @@ async fn send_issue(
     Ok(())
 }
 
+//function to wait for server response. called when when start up the server
 async fn wait_for_server_ready() {
     let client = Client::new();
     for _ in 0..30 {
