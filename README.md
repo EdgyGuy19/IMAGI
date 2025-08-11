@@ -36,6 +36,22 @@ AI-Grader is a CLI tool that automates grading of Java assignments for KTH cours
 
 ### Dependencies
 
+#### Git
+
+To use this tool, you must set up an SSH key for authenticating with the inda-organization on GitHub.
+
+1. **Generate an SSH key:**
+   Follow the official guide:
+   [How to generate an SSH key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
+
+2. **Add your SSH key to GitHub:**
+   See instructions here:
+   [How to add an SSH key to your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
+
+**Tip:**
+Make sure your SSH key is added to your SSH agent and associated with your GitHub account before running any commands that clone repositories(Try to clone repositories repository manually beforehand to make sure it works. One from inda master and one inda-25).
+
+
 #### Rust
 
 The recommended way to install Rust is via [rustup](https://rustup.rs/):
