@@ -42,6 +42,7 @@ use crate::github_api::{
     \n\
       grader java --json <src_paths.json> --output <output-dir> --tests <solutions-src-dir> --jars <jars-dir>\n\
         Compile and test all student Java files, collect results, and create JSON payloads for each student.\n\
+        When compiling and running tests, any student-written test files (e.g., *Test.java) are moved to a student_tests/ directory to avoid conflicts with the provided tests.\n\
         Example:\n\
           grader java --json /home/inda-25/task-5/src_paths.json \\\n\
                       --output /home/inda-25/task-5/compiled \\\n\
@@ -61,7 +62,7 @@ use crate::github_api::{
       - All commands that clone or generate files require an explicit --output directory.\n\
       - Output directories will be created automatically if they do not exist.\n\
       - The 'grade' command integrates with the Python AI API and posts feedback to GitHub issues.\n\
-      - The 'feedback' command displays concise, AI-generated feedback for each student.\n"
+      "
 )]
 struct Cli {
     #[command(subcommand)]
