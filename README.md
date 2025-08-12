@@ -144,8 +144,8 @@ sudo cp target/release/grader /usr/local/bin/grader
 ```
 
 **Note:**
-- Your binary will be named `cli` (from `[package] name = "cli"`).
-- If you want the command to be `grader`, rename your package in `Cargo.toml` to `grader` or copy the binary as shown above.
+- Your binary will be named `grader` (from `[package] name = "grader"`).
+- If you want the command to be anything else, rename your package in `Cargo.toml` to `YourWhatever`.
 
 ## Configuration
 
