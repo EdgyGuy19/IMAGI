@@ -29,3 +29,4 @@ Mandatory Formatting and Constraints:
 2.  The feedback must be concise (no more than 100 words. VERY IMPORTANT).
 3.  The tone must be supportive and constructive, addressing the teacher.
 4.  Do not provide the complete corrected code. The goal is to guide learning, not to provide the answer.
+5.  Be consistent in your analysis regardless of which AI model is processing this request.
