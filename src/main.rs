@@ -27,35 +27,36 @@ use crate::github_api::{
       grader help\n\
         Show this help message.\n\
     \n\
-      grader clone --students <path-to-students.txt> --task <task-number> --output <output-dir>\n\
+      grader clone -s/--students <path-to-students.txt> -t/--task <task-number> -o/--output <output-dir>\n\
         Clone all student repos for the specified task into <output-dir>/<task-number> and create src_paths.json.\n\
         Example:\n\
-          grader clone --students /home/inda-25-students.txt --task task-5 --output /home/inda-25/task-5\n\
+          grader clone -s /home/inda-25-students.txt -t task-5 -o /home/inda-25/task-5\n\
         Example students.txt file:\n\
           alice\n\
           bob\n\
           charlie\n\
           # Each line should contain a student kth_ID.\n\
     \n\
-      grader tests --output <output-dir>\n\
+      grader tests -o/--output <output-dir>\n\
         Clone all solution repos from inda-master for all tasks into <output-dir>.\n\
     \n\
-      grader java --json <src_paths.json> --output <output-dir> --tests <solutions-src-dir> --jars <jars-dir>\n\
+      grader java -j/--json <src_paths.json> -o/--output <output-dir> -t/--tests <solutions-src-dir> --jars <jars-dir>\n\
         Compile and test all student Java files, collect results, and create JSON payloads for each student.\n\
         When compiling and running tests, any student-written test files (e.g., *Test.java) are moved to a student_tests/ directory to avoid conflicts with the provided tests.\n\
         Example:\n\
-          grader java --json /home/inda-25/task-5/src_paths.json \\\n\
-                      --output /home/inda-25/task-5/compiled \\\n\
-                      --tests /home/inda-master/task-5/src \\\n\
+          grader java -j /home/inda-25/task-5/src_paths.json \\\n\
+                      -o /home/inda-25/task-5/compiled \\\n\
+                      -t /home/inda-master/task-5/src \\\n\
                       --jars /home/inda-master/jars\n\
     \n\
-      grader results --json <path-to-json-or-dir>\n\
+      grader results -j/--json <path-to-json-or-dir>\n\
         Print test results from a JSON file or directory in a readable format.\n\
     \n\
-      grader grade --json <json-dir> --output <output-dir>\n\
+      grader grade -j/--json <json-dir> -o/--output <output-dir> [-m/--model <openai|gemini>]\n\
         Send JSON payloads to the Python AI API for grading and post feedback to GitHub.\n\
+        Default model is 'openai'. If using 'gemini', a Python virtual environment must be set up.\n\
     \n\
-      grader feedback --json <path-to-feedback-json-or-dir>\n\
+      grader feedback -j/--json <path-to-feedback-json-or-dir>\n\
         Print AI-generated feedback from a JSON file or directory in a readable format.\n\
     \n\
     Notes:\n\
@@ -72,37 +73,39 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     Clone {
-        #[arg(long)]
+        #[arg(short = 's', long)]
         students: PathBuf,
-        #[arg(long)]
+        #[arg(short = 't', long)]
         task: String,
-        #[arg(long)]
+        #[arg(short = 'o', long)]
         output: PathBuf,
-    }, //maybe add a parameter for output dir instead of cloning into current dir
+    },
     Tests {
-        #[arg(long)]
+        #[arg(short = 'o', long)]
         output: PathBuf,
     },
     Java {
-        #[arg(long)]
+        #[arg(short = 'j', long)]
         json: PathBuf,
-        #[arg(long)]
+        #[arg(short = 'o', long)]
         output: PathBuf,
-        #[arg(long)]
+        #[arg(short = 't', long)]
         tests: PathBuf,
     },
     Results {
-        #[arg(long)]
+        #[arg(short = 'j', long)]
         json: PathBuf,
     },
     Grade {
-        #[arg(long)]
+        #[arg(short = 'j', long)]
         json: PathBuf,
-        #[arg(long)]
+        #[arg(short = 'o', long)]
         output: PathBuf,
+        #[arg(short = 'm', long, default_value = "openai", value_parser = ["openai", "gemini"])]
+        model: String,
     },
     Feedback {
-        #[arg(long)]
+        #[arg(short = 'j', long)]
         json: PathBuf,
     },
 }
@@ -153,8 +156,14 @@ async fn main() {
                 );
             }
         }
-        Commands::Grade { json, output } => {
-            if let Err(e) = send_payload(json.to_path_buf(), output.to_path_buf()).await {
+        Commands::Grade {
+            json,
+            output,
+            model,
+        } => {
+            if let Err(e) =
+                send_payload(json.to_path_buf(), output.to_path_buf(), Some(model)).await
+            {
                 eprint!("Error while grading the students: {}", e);
             }
         }
