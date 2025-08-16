@@ -106,6 +106,25 @@ pub fn get_tests(output_dir: PathBuf) -> Result<(), Box<dyn std::error::Error>> 
             .status()?;
     }
 
+    let quicksort = "quicksort";
+    let repo_url = basic_url.replace("{task}", &quicksort);
+    let dest_dir = output_dir.join(&quicksort);
+    println!("Cloning {} into {:?}", repo_url, dest_dir);
+    Command::new("git")
+        .arg("clone")
+        .arg(&repo_url)
+        .arg(&dest_dir)
+        .status()?;
+
+    Command::new("git")
+        .arg("-C")
+        .arg(&dest_dir)
+        .arg("checkout")
+        .arg("-B")
+        .arg("solutions")
+        .arg("origin/solutions")
+        .status()?;
+
     Ok(())
 }
 
@@ -358,13 +377,42 @@ pub fn print_feedback(json_path: PathBuf) -> Result<(), Box<dyn std::error::Erro
 }
 
 //sending payload to the AI-api. Receiving back the graded feedback as well
+//model parameter determines which AI model to use ("openai" or "gemini")
 pub async fn send_payload(
     json_dir: PathBuf,
     output_dir: PathBuf,
+    model: Option<&str>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    // 1. Start the API server in background
+    use std::io;
+
+    // 1. Create output directory
     fs::create_dir_all(&output_dir)?;
-    let mut server = Command::new("uvicorn").arg("AI_api.api:app").spawn()?;
+
+    // Define API endpoint and server command based on model choice
+    let model_str = model.unwrap_or("openai");
+    let api_endpoint = match model_str {
+        "gemini" => "http://127.0.0.1:8000/grade_gemini",
+        _ => "http://127.0.0.1:8000/grade_gpt", // Default to OpenAI
+    };
+
+    // Start the API server with the appropriate module and venv if needed
+    let mut server = if model_str == "gemini" {
+        // Check if venv exists (required for Gemini API)
+        let venv_python = PathBuf::from("venv/bin/python");
+        if !venv_python.exists() {
+            return Err("Virtual environment not found for Gemini API. Please create it using 'python -m venv venv' and install required packages with 'pip install google.generativeai fastapi uvicorn'.".into());
+        }
+
+        // Use Python from venv to run the server with geminiAPI module
+        Command::new(venv_python)
+            .arg("-m")
+            .arg("uvicorn")
+            .arg("AI_api.geminiAPI:app")
+            .spawn()?
+    } else {
+        // Use standard uvicorn command for OpenAI
+        Command::new("uvicorn").arg("AI_api.gptAPI:app").spawn()?
+    };
 
     // 2. Wait a moment to let the server boot
     wait_for_server_ready().await;
@@ -376,7 +424,7 @@ pub async fn send_payload(
         if path.is_file() {
             let content = fs::read_to_string(path)?; //basic post request
             let post = api
-                .post("http://127.0.0.1:8000/grade") // http://127.0.0.1:8000/docs to check the server
+                .post(api_endpoint) // Use model-specific endpoint (either /grade_gpt or /grade_gemini)
                 .header("Content-Type", "application/json")
                 .body(content)
                 .send()
@@ -395,14 +443,34 @@ pub async fn send_payload(
                 )?;
                 let json_path_name = format!("{}_feedback.json", student_id);
                 let json_path = output_dir.join(json_path_name);
-                fs::write(json_path, feedback_json)?;
-                send_issue(
-                    task.to_string(),
-                    student_id.to_string(),
-                    status.to_string(),
-                    ai_feedback.to_string(),
-                )
-                .await?;
+                fs::write(&json_path, feedback_json)?;
+
+                let mut response = String::new();
+                println!(
+                    "Would you like to create a github issue for this student:{}? Issue will contain this generated feedback:{}",
+                    student_id, ai_feedback
+                );
+                io::stdin().read_line(&mut response)?;
+                while response.trim() != "n" && response.trim() != "y" {
+                    println!("Please enter 'y' or 'n':");
+                    response.clear();
+                    io::stdin().read_line(&mut response)?;
+                }
+                if response.trim() == "y" {
+                    send_issue(
+                        task.to_string(),
+                        student_id.to_string(),
+                        status.to_string(),
+                        ai_feedback.to_string(),
+                    )
+                    .await?;
+                } else if response.trim() == "n" {
+                    println!(
+                        "No issue will be created for this student:{}, but the feedback will be saved locally at this path:{}.",
+                        student_id,
+                        &json_path.to_string_lossy()
+                    );
+                }
             } else {
                 let err_text = post.text().await?;
                 eprintln!("Error: {}", err_text);
