@@ -40,14 +40,13 @@ use crate::github_api::{
       grader tests -o/--output <output-dir>\n\
         Clone all solution repos from inda-master for all tasks into <output-dir>.\n\
     \n\
-      grader java -j/--json <src_paths.json> -o/--output <output-dir> -t/--tests <solutions-src-dir> --jars <jars-dir>\n\
+      grader java -j/--json <src_paths.json> -o/--output <output-dir> -t/--tests <solutions-src-dir>\n\
         Compile and test all student Java files, collect results, and create JSON payloads for each student.\n\
         When compiling and running tests, any student-written test files (e.g., *Test.java) are moved to a student_tests/ directory to avoid conflicts with the provided tests.\n\
         Example:\n\
           grader java -j /home/inda-25/task-5/src_paths.json \\\n\
                       -o /home/inda-25/task-5/compiled \\\n\
                       -t /home/inda-master/task-5/src \\\n\
-                      --jars /home/inda-master/jars\n\
     \n\
       grader results -j/--json <path-to-json-or-dir>\n\
         Print test results from a JSON file or directory in a readable format.\n\

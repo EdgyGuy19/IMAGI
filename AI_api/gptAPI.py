@@ -45,7 +45,7 @@ async def grade(request: ReceivedPayload):
         filenames_str = ", ".join(filenames)
         contents_str = "\n\n".join(contents)
 
-        with open("teacher.txt") as f:
+        with open("AI_api/student.txt") as f:
             template = f.read()
             prompt = template.format(request.read_me, filenames_str, contents_str, request.test_results)
 

@@ -168,12 +168,15 @@ For more details, see [GitHub Docs: Creating a personal access token](https://do
 ### Set these before running the CLI:
 
 ```sh
+export AI_GRADER_ROOT=/path/to/AI-Grader/project/directory
 export AI_GRADER_JARS_DIR=/path/to/jars/directory
 export GITHUB_TOKEN=your_github_token
 export GRADER_OPENAI_API_KEY=your_openai_api_key
 # If using Gemini model:
 export GRADER_GEMINI_API_KEY=your_gemini_api_key
 ```
+
+**Important:** The `AI_GRADER_ROOT` variable must point to the directory containing the `AI_api` folder. This is required for the `grade` command to work from any directory.
 
 #### Google Gemini API Key
 
@@ -298,7 +301,7 @@ AI-Grader/
 - **GitHub issue creation fails:** Check your `GITHUB_TOKEN` and repo permissions.
 - **Missing dependencies:** Double-check installation steps above.
 - **Command not found:** Make sure you installed the CLI globally and your binary name matches (`cli` or `grader`). Check that `~/.cargo/bin` is in your `PATH`.
-- **Missing environment variables:** Ensure you have set `GITHUB_TOKEN`, `AI_GRADER_JARS_DIR`, and either `GRADER_OPENAI_API_KEY` or `GRADER_GEMINI_API_KEY` (depending on your chosen model) before running the CLI.
+- **Missing environment variables:** Ensure you have set `AI_GRADER_ROOT`, `GITHUB_TOKEN`, `AI_GRADER_JARS_DIR`, and either `GRADER_OPENAI_API_KEY` or `GRADER_GEMINI_API_KEY` (depending on your chosen model) before running the CLI.
 - **Gemini API errors:** If using the Gemini model, make sure you've set up the virtual environment correctly with `python -m venv venv` and installed the required packages. On non-Arch Linux systems, you can also modify the code to run without a virtual environment (see the commented code in `github_api.rs`).
 
 - **If the error persists contact me via slack or create a github issue!!!:**
