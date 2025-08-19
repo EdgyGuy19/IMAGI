@@ -49,7 +49,7 @@ To use this tool, you must set up an SSH key for authenticating with the inda-or
    [How to add an SSH key to your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
 
 **Tip:**
-Make sure your SSH key is added to your SSH agent and associated with your GitHub account before running any commands that clone repositories(Try to clone repositories repository manually beforehand to make sure it works. One from inda master and one inda-25).
+Make sure your SSH key is added to your SSH agent and associated with your GitHub account before running any commands that clone repositories(Try to clone repositories repository manually beforehand to make sure it works. One from inda-master and one inda-25).
 
 
 #### Rust
