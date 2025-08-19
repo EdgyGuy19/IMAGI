@@ -208,7 +208,7 @@ pub fn run_java_tests(
         let path = entry.path();
         if path.is_file() {
             if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                if name.contains("Test") {
+                if name.contains("Test.java") {
                     test_files_to_move.push((path.clone(), name.to_string()));
                 }
             }
