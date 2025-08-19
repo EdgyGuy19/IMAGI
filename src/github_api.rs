@@ -151,7 +151,7 @@ pub fn create_payload(
             .unwrap_or("")
             .to_string();
     }
-    let dir_path = path_to_task_dir.join("json_files");
+    let dir_path = path_to_task_dir;
     std::fs::create_dir_all(&dir_path)?;
     for (key, value) in &map {
         let mut source_files: Vec<SourceFile> = Vec::new();
@@ -383,8 +383,6 @@ pub async fn send_payload(
     output_dir: PathBuf,
     model: Option<&str>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    use std::io;
-
     // 1. Create output directory
     fs::create_dir_all(&output_dir)?;
 
@@ -395,10 +393,25 @@ pub async fn send_payload(
         _ => "http://127.0.0.1:8000/grade_gpt", // Default to OpenAI
     };
 
+    // Get project root from environment variable
+    let project_root = PathBuf::from(
+        env::var("AI_GRADER_ROOT")
+            .map_err(|_| "AI_GRADER_ROOT environment variable not set. Please set it to the path containing the AI_api directory.")?
+    );
+
+    // Verify AI_api directory exists
+    if !project_root.join("AI_api").exists() {
+        return Err(format!(
+            "AI_api directory not found in: {}. Please check your AI_GRADER_ROOT setting.",
+            project_root.display()
+        )
+        .into());
+    }
+
     // Start the API server with the appropriate module and venv if needed
     let mut server = if model_str == "gemini" {
         // Check if venv exists (required for Gemini API, especially on Arch Linux)
-        let venv_python = PathBuf::from("venv/bin/python");
+        let venv_python = project_root.join("venv/bin/python");
         if !venv_python.exists() {
             return Err("Virtual environment not found for Gemini API. Please create it using:\n\npython -m venv venv\nsource venv/bin/activate\npip install google-generativeai fastapi uvicorn\n\nAlternatively, edit github_api.rs to use system Python if your distro supports it.".into());
         }
@@ -408,6 +421,7 @@ pub async fn send_payload(
             .arg("-m")
             .arg("uvicorn")
             .arg("AI_api.geminiAPI:app")
+            .current_dir(&project_root)
             .spawn()?
 
         // UNCOMMENT THIS SECTION AND COMMENT OUT THE ABOVE SECTION IF YOU DON'T NEED A VIRTUAL ENVIRONMENT
@@ -420,10 +434,14 @@ pub async fn send_payload(
         //     .arg("-m")
         //     .arg("uvicorn")
         //     .arg("AI_api.geminiAPI:app")
+        //     .current_dir(&project_root)
         //     .spawn()?
     } else {
         // Use standard uvicorn command for OpenAI
-        Command::new("uvicorn").arg("AI_api.gptAPI:app").spawn()?
+        Command::new("uvicorn")
+            .arg("AI_api.gptAPI:app")
+            .current_dir(&project_root)
+            .spawn()?
     };
 
     // 2. Wait a moment to let the server boot
@@ -458,13 +476,43 @@ pub async fn send_payload(
                 fs::write(&json_path, feedback_json)?;
 
                 let mut response = String::new();
+
+                // Print formatted output with colors and better layout
+                println!("\n{}", "=".repeat(80));
                 println!(
-                    "Would you like to create a github issue for this student:{}? Issue will contain this generated feedback:{}",
-                    student_id, ai_feedback
+                    "\x1b[1;36m📝 FEEDBACK READY FOR: {}\x1b[0m",
+                    student_id.to_uppercase()
                 );
+                println!("{}", "=".repeat(80));
+
+                println!("\x1b[1;33m📋 Task:\x1b[0m {}", task);
+                println!("\x1b[1;32m✅ Status:\x1b[0m {}", status);
+
+                println!("\n\x1b[1;35m💬 Generated Feedback:\x1b[0m");
+                println!("{}", "-".repeat(50));
+                // Format feedback with proper line breaks and indentation
+                for line in ai_feedback.lines() {
+                    println!("  {}", line);
+                }
+                println!("{}", "-".repeat(50));
+
+                println!(
+                    "\n\x1b[1;34m🤔 Would you like to create a GitHub issue for this student?\x1b[0m"
+                );
+                println!(
+                    "   \x1b[32m[y]\x1b[0m Yes, create issue   \x1b[31m[n]\x1b[0m No, save locally only"
+                );
+                print!("\x1b[1;37m➤ Your choice: \x1b[0m");
+                use std::io::{self, Write};
+                io::stdout().flush()?;
+
                 io::stdin().read_line(&mut response)?;
                 while response.trim() != "n" && response.trim() != "y" {
-                    println!("Please enter 'y' or 'n':");
+                    println!(
+                        "\x1b[1;31m❌ Invalid input!\x1b[0m Please enter \x1b[32m'y'\x1b[0m or \x1b[31m'n'\x1b[0m:"
+                    );
+                    print!("\x1b[1;37m➤ Your choice: \x1b[0m");
+                    io::stdout().flush()?;
                     response.clear();
                     io::stdin().read_line(&mut response)?;
                 }
@@ -478,11 +526,17 @@ pub async fn send_payload(
                     .await?;
                 } else if response.trim() == "n" {
                     println!(
-                        "No issue will be created for this student:{}, but the feedback will be saved locally at this path:{}.",
-                        student_id,
+                        "\n\x1b[1;33m📁 Feedback saved locally for {}\x1b[0m",
+                        student_id
+                    );
+                    println!(
+                        "   \x1b[90m💾 Location: {}\x1b[0m",
                         &json_path.to_string_lossy()
                     );
+                    println!("   \x1b[90m🚫 No GitHub issue will be created.\x1b[0m");
                 }
+
+                println!("{}\n", "=".repeat(80));
             } else {
                 let err_text = post.text().await?;
                 eprintln!("Error: {}", err_text);
@@ -526,9 +580,12 @@ async fn send_issue(
         .await?;
 
     if res.status().is_success() {
-        println!("✅ Issue created successfully!");
+        println!("\n\x1b[1;32m✅ SUCCESS: GitHub issue created!\x1b[0m");
+        println!("   \x1b[90m🔗 Issue posted to repository successfully\x1b[0m");
     } else {
-        println!("❌ Failed to create issue: {:?}", res.text().await?);
+        let error_msg = res.text().await?;
+        println!("\n\x1b[1;31m❌ FAILED: Could not create GitHub issue\x1b[0m");
+        println!("   \x1b[90m🔍 Error details: {}\x1b[0m", error_msg);
     }
 
     Ok(())

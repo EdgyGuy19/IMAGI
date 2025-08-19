@@ -46,7 +46,7 @@ async def grade(request: ReceivedPayload):
         contents_str = "\n\n".join(contents)
 
         # Build prompt using teacher.txt template
-        with open("teacher.txt") as f:
+        with open("AI_api/student.txt") as f:
             template = f.read()
             prompt = template.format(
                 request.read_me,
