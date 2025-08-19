@@ -28,7 +28,7 @@ AI-Grader is a CLI tool that automates grading of Java assignments for KTH cours
 
 ### System Requirements
 
-- Linux (tested on Arch Linux)
+- Linux or MacOS (tested on Arch Linux)
 - Rust (via [rustup](https://rustup.rs/))
 - Python 3.9+
 - Java JDK (javac, java)
