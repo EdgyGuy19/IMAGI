@@ -1,7 +1,10 @@
+use crate::json_parser::IssueTitle;
 use crate::json_parser::SourceFile;
+use crate::json_parser::StatusIssue;
 use crate::json_parser::create_feedback_json;
 use crate::json_parser::create_issue;
 use crate::json_parser::create_payload_json;
+use crate::json_parser::parse_issue_status;
 use crate::json_parser::parse_source_file;
 use reqwest::Client;
 use reqwest::header::AUTHORIZATION;
@@ -437,8 +440,15 @@ pub async fn send_payload(
         //     .current_dir(&project_root)
         //     .spawn()?
     } else {
-        // Use standard uvicorn command for OpenAI
-        Command::new("uvicorn")
+        // Use Python from venv to run the server with gptAPI module
+        let venv_python = project_root.join("AI_api/venv/bin/python");
+        if !venv_python.exists() {
+            return Err("Virtual environment not found for OpenAI API. Please create it using:\n\npython -m venv AI_api/venv\nsource AI_api/venv/bin/activate\npip install fastapi uvicorn openai pydantic\n\nAlternatively, edit github_api.rs to use system Python if your distro supports it.".into());
+        }
+
+        Command::new(venv_python)
+            .arg("-m")
+            .arg("uvicorn")
             .arg("AI_api.gptAPI:app")
             .current_dir(&project_root)
             .spawn()?
@@ -517,11 +527,52 @@ pub async fn send_payload(
                     io::stdin().read_line(&mut response)?;
                 }
                 if response.trim() == "y" {
+                    // Ask for teacher feedback
+                    println!(
+                        "\n\x1b[1;34m🧑‍🏫 Would you like to add your own feedback before creating the issue?\x1b[0m"
+                    );
+                    println!(
+                        "   \x1b[32m[y]\x1b[0m Yes, add my feedback   \x1b[31m[n]\x1b[0m No, use AI feedback only"
+                    );
+                    print!("\x1b[1;37m➤ Your choice: \x1b[0m");
+                    io::stdout().flush()?;
+
+                    let mut teacher_response = String::new();
+                    io::stdin().read_line(&mut teacher_response)?;
+
+                    let complete_feedback = if teacher_response.trim() == "y" {
+                        // Get teacher's feedback
+                        println!(
+                            "\n\x1b[1;36m📝 Enter your feedback (type 'DONE' on a new line when finished):\x1b[0m"
+                        );
+                        let mut teacher_feedback = String::new();
+                        let mut line = String::new();
+
+                        loop {
+                            line.clear();
+                            io::stdin().read_line(&mut line)?;
+                            if line.trim() == "DONE" {
+                                break;
+                            }
+                            teacher_feedback.push_str(&line);
+                        }
+
+                        // Combine teacher's feedback with AI feedback
+                        format!(
+                            "👨‍🏫 **Teacher's note**:\n\n{}\n\n---\n\n🤖 **AI Suggestions**:\n\n{}",
+                            teacher_feedback.trim(),
+                            ai_feedback
+                        )
+                    } else {
+                        // Use only AI feedback
+                        ai_feedback.to_string()
+                    };
+
                     send_issue(
                         task.to_string(),
                         student_id.to_string(),
                         status.to_string(),
-                        ai_feedback.to_string(),
+                        complete_feedback,
                     )
                     .await?;
                 } else if response.trim() == "n" {
@@ -609,3 +660,93 @@ async fn wait_for_server_ready() {
     }
     panic!("Server did not start in time!");
 }
+
+pub async fn check_issues(
+    students: PathBuf,
+    task: String,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let token = env::var("GITHUB_TOKEN").expect("Set the GITHUB_TOKEN environment variable");
+    let file = File::open(students)?;
+    let buf = std::io::BufReader::new(file);
+    let mut students_list = Vec::new();
+    let mut list_issues: Vec<StatusIssue> = Vec::new();
+    for line in buf.lines() {
+        let student = line?.trim().to_string();
+        if student.is_empty() || student.starts_with('#') {
+            continue; // Skip empty lines and comments
+        }
+        students_list.push(student);
+    }
+    let org = "inda-24";
+    for student in students_list {
+        let repo = format!("{}-{}", student, task);
+        let url = format!(
+            "https://gits-15.sys.kth.se/api/v3/repos/{}/{}/issues",
+            org, repo
+        );
+        let client = reqwest::Client::new();
+        let titles = ["PASS", "FAIL", "KOMP", "KOMPLETTERING"];
+        let mut headers = HeaderMap::new();
+        headers.insert(USER_AGENT, HeaderValue::from_static("AI-Grader"));
+        headers.insert(
+            AUTHORIZATION,
+            HeaderValue::from_str(&format!("token {}", token))?,
+        );
+        let response = client.get(&url).headers(headers).send().await?;
+
+        if response.status().is_success() {
+            let issues: Vec<IssueTitle> = response.json().await?;
+
+            // Check if any issue has the title we're looking for
+            let mut found_matching_title = false;
+            for issue in issues {
+                for title in titles {
+                    // Convert both to uppercase for case-insensitive matching
+                    let issue_upper = issue.title.to_uppercase();
+                    let title_upper = title.to_uppercase();
+
+                    // Check if the issue title contains our status keyword
+                    if issue_upper.contains(&title_upper) {
+                        let status = title.to_string(); // Use our known status, not the full title
+                        let student_issue = parse_issue_status(&student, &status)?;
+                        list_issues.push(student_issue);
+                        found_matching_title = true;
+                        break;
+                    }
+                }
+            }
+
+            // If no matching title found, add NULL status
+            if !found_matching_title {
+                let student_issue = parse_issue_status(&student, "NULL")?;
+                list_issues.push(student_issue);
+            }
+        } else {
+            // Handle API error
+            return Err(format!("API error: {}", response.status()).into());
+        }
+    }
+
+    // Print the formatted data table
+    println!("\n{}", "=".repeat(60));
+    println!("| {:<20} | {:<15} | {:<5} |", "STUDENT", "STATUS", "");
+    println!("|{:-<22}|{:-<17}|{:-<7}|", "", "", "");
+
+    for issue in &list_issues {
+        let emoji = match issue.status.as_str() {
+            "PASS" => "✅",
+            "FAIL" => "❌",
+            "KOMP" | "KOMPLETTERING" => "🔄",
+            _ => "❓",
+        };
+        println!(
+            "| {:<20} | {:<15} | {:<5} |",
+            issue.studentid, issue.status, emoji
+        );
+    }
+    println!("{}", "=".repeat(60));
+
+    Ok(())
+}
+
+//function to post title issues PASS FAIL OR ETC

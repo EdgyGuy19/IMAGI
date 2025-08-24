@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::{self, Deserialize, Serialize};
 use std::path::Path;
 
 //struct for payload that we use for AI api later
@@ -31,6 +31,27 @@ pub struct FeedbackEntry {
 pub struct Issue {
     title: String,
     body: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct StatusIssue {
+    pub studentid: String,
+    pub status: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct IssueTitle {
+    pub title: String,
+    #[serde(skip_deserializing)]
+    pub number: i64,
+    #[serde(skip_deserializing)]
+    pub state: String,
+    #[serde(skip_deserializing)]
+    pub body: Option<String>,
+    #[serde(skip_deserializing)]
+    pub created_at: Option<String>,
+    #[serde(skip_deserializing)]
+    pub updated_at: Option<String>,
 }
 
 //Functions for creating our structs and parsing to JSON
@@ -85,4 +106,15 @@ pub fn parse_source_file(
         content: content_json,
     };
     Ok(source_file)
+}
+
+pub fn parse_issue_status(
+    student: &str,
+    status: &str,
+) -> Result<StatusIssue, Box<dyn std::error::Error>> {
+    let status_issue = StatusIssue {
+        studentid: student.to_string(),
+        status: status.to_string(),
+    };
+    Ok(status_issue)
 }

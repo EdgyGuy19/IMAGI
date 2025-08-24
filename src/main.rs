@@ -5,7 +5,8 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand};
 
 use crate::github_api::{
-    clone_repos, create_payload, get_tests, print_feedback, print_test_results, send_payload,
+    check_issues, clone_repos, create_payload, get_tests, print_feedback, print_test_results,
+    send_payload,
 };
 
 #[derive(Parser)]
@@ -107,6 +108,12 @@ enum Commands {
         #[arg(short = 'j', long)]
         json: PathBuf,
     },
+    Issues {
+        #[arg(short = 's', long)]
+        students: PathBuf,
+        #[arg(short = 't', long)]
+        task: String,
+    },
 }
 
 #[tokio::main]
@@ -172,6 +179,11 @@ async fn main() {
                     "Error while getting the json file/dir or while printing the feedback: {}",
                     e
                 );
+            }
+        }
+        Commands::Issues { students, task } => {
+            if let Err(e) = check_issues(students.to_path_buf(), task.to_string()).await {
+                eprint!("Error while trying to get the issues statuses: {}", e);
             }
         }
     }
