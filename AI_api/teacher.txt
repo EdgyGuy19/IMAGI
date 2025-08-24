@@ -25,8 +25,12 @@ Action 3: Provide Guidance for the Teacher. Suggest how the teacher can prompt t
 Mandatory Formatting and Constraints:
 
 1.  Your entire response must be in this exact format:
-    Improvements: <your feedback here>
-2.  The feedback must be concise (no more than 100 words. VERY IMPORTANT).
+    Improvements:
+    - [ ] <highest priority improvement>
+    - [ ] <second priority improvement>
+    - [ ] <third priority improvement>
+2.  The feedback must be concise (no more than 100 words. VERY IMPORTANT). List improvements ranked by importance, with the most critical improvement first.
 3.  The tone must be supportive and constructive, addressing the teacher.
 4.  Do not provide the complete corrected code. The goal is to guide learning, not to provide the answer.
 5.  Be consistent in your analysis regardless of which AI model is processing this request.
+6.You feedback output MUST BE structured like this: Hybrid Feedback: <Your feedback here>. Your output will be used to create a json file so it is really improtant that you follow this constraint
