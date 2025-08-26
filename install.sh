@@ -196,6 +196,7 @@ source venv/bin/activate
 # Set environment variables
 export AI_GRADER_ROOT=$(pwd)
 export AI_GRADER_JARS_DIR=$(pwd)/jars
+export PATH="\$HOME/.cargo/bin:\$PATH"
 
 # Check for required environment variables
 if [ -z "\$GITHUB_TOKEN" ]; then
@@ -228,6 +229,30 @@ build_and_install_cli() {
     cargo build --release
     cargo install --path .
 
+    # Add cargo bin to PATH in shell profile
+    SHELL_PROFILE=""
+    if [[ -f "$HOME/.bashrc" ]]; then
+        SHELL_PROFILE="$HOME/.bashrc"
+    elif [[ -f "$HOME/.zshrc" ]]; then
+        SHELL_PROFILE="$HOME/.zshrc"
+    elif [[ -f "$HOME/.profile" ]]; then
+        SHELL_PROFILE="$HOME/.profile"
+    fi
+
+    if [[ -n "$SHELL_PROFILE" ]]; then
+        echo "Adding cargo bin directory to PATH in $SHELL_PROFILE"
+        # Check if PATH already includes cargo bin
+        if ! grep -q "PATH=.*\.cargo\/bin" "$SHELL_PROFILE"; then
+            echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> "$SHELL_PROFILE"
+            echo "✅ Added cargo bin to PATH in $SHELL_PROFILE"
+        else
+            echo "✅ PATH already includes cargo bin directory"
+        fi
+    else
+        echo "⚠️ Could not find shell profile file. Please add the following to your shell profile:"
+        echo 'export PATH="$HOME/.cargo/bin:$PATH"'
+    fi
+
     echo "✅ AI-Grader built and installed successfully!"
 }
 
@@ -250,10 +275,13 @@ echo "   export GITHUB_TOKEN=your_github_token"
 echo "   export GRADER_OPENAI_API_KEY=your_openai_api_key"
 echo "   export GRADER_GEMINI_API_KEY=your_gemini_api_key (optional)"
 echo
-echo "2. Start the AI-Grader environment:"
+echo "2. Start a new terminal session or source your profile:"
+echo "   source ~/.bashrc  # or ~/.zshrc depending on your shell"
+echo
+echo "3. Start the AI-Grader environment:"
 echo "   ./start_ai_grader.sh"
 echo
-echo "3. Run grader commands, for example:"
+echo "4. Run grader commands, for example:"
 echo "   grader help"
 echo
 echo "Thank you for installing AI-Grader!"
