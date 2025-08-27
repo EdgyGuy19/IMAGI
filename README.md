@@ -110,6 +110,53 @@ cargo build        # for development
 cargo build --release   # for optimized release build
 ```
 
+### Automated Installation
+
+The easiest way to install AI-Grader is to use our installation script:
+
+```sh
+# Clone the repository (if you haven't already)
+git clone https://github.com/EdgyGuy19/AI-Grader.git
+cd AI-Grader
+
+# Run the installation script
+./install.sh
+```
+
+The installation script will:
+1. Detect your operating system and package manager
+2. Install all necessary dependencies (Python, Rust, Java, Git, etc.)
+3. Set up a Python virtual environment
+4. Build and install the AI-Grader CLI globally
+5. Configure your PATH to make the `grader` command available
+
+**Important:** After installation, you should **restart your terminal** or open a new terminal window to ensure all PATH changes are applied.
+
+After restarting your terminal:
+1. Set up your API keys if you haven't already:
+   ```sh
+   export GITHUB_TOKEN=your_github_token
+   export GRADER_OPENAI_API_KEY=your_openai_api_key
+   # Or if using Gemini:
+   # export GRADER_GEMINI_API_KEY=your_gemini_api_key
+   ```
+
+2. Run grader commands from anywhere:
+   ```sh
+   # Examples:
+   grader help
+   grader clone -s students.txt -t task-1 -o ./output
+   ```
+
+**Note:** On some Debian/Ubuntu systems, you may need to install additional dependencies:
+```sh
+sudo apt-get install pkg-config libssl-dev
+```
+
+### Manual Installation
+
+If you prefer to install manually, follow these steps:
+
 #### Global installation
 
 To install the grader CLI globally, run from the repository:
@@ -125,7 +172,7 @@ After installation, you can run `grader` from any directory:
 grader help
 ```
 
-If the command does not work try to add this to your .bashrc`, `.zshrc`, or equivalent:
+If the command does not work try to add this to your `.bashrc`, `.zshrc`, or equivalent:
 
 ```sh
 export PATH="$HOME/.cargo/bin:$PATH"
@@ -225,6 +272,7 @@ To use the cli you will need to create a .txt file with kth ids of all the stude
 - `results`   - Print test results from JSON file(s) in a clear terminal format.
 - `grade`     - Send JSON payloads to the Python AI API for grading and post feedback to GitHub. Supports both OpenAI and Google Gemini models.
 - `feedback`  - Print AI-generated feedback from JSON file(s) in a clear terminal format.
+- `issues`    - Check GitHub issues for students' repositories and display their status (PASS, FAIL, KOMP, KOMPLETTERING).
 
 ### Help Output
 
@@ -276,6 +324,13 @@ grader grade --json ./output/task-1/compiled/json_files --output ./feedback --mo
 grader feedback -j ./feedback
 # or with long options:
 grader feedback --json ./feedback
+
+# Check issue statuses for students in a task
+grader issues -s students.txt -t task-1
+# or with long options:
+grader issues --students students.txt --task task-1
+
+
 ```
 **Note:**
 When compiling and running tests, any student-written test files (e.g., `*Test.java`) are moved to a `student_tests/` directory to avoid conflicts with the provided tests.
@@ -289,9 +344,10 @@ AI-Grader/
 │   ├── github_api.rs    # Rust file with all the functions that are used in the main.rs
 │   └── json_parser.rs   # Rust file containing JSON formats and functions for formatting to JSON
 ├── AI_api/
-│   ├── gptAPI.py           # File for the OpenAI grading API
+│   ├── gptAPI.py        # File for the OpenAI grading API
 │   └── geminiAPI.py     # File for the Google Gemini grading API
 ├── jars/                # JUnit/Hamcrest jars
+└── install.sh           # Installation script for automated setup
 ```
 
 ## Troubleshooting
@@ -303,6 +359,10 @@ AI-Grader/
 - **Command not found:** Make sure you installed the CLI globally and your binary name matches (`cli` or `grader`). Check that `~/.cargo/bin` is in your `PATH`.
 - **Missing environment variables:** Ensure you have set `AI_GRADER_ROOT`, `GITHUB_TOKEN`, `AI_GRADER_JARS_DIR`, and either `GRADER_OPENAI_API_KEY` or `GRADER_GEMINI_API_KEY` (depending on your chosen model) before running the CLI.
 - **Gemini API errors:** If using the Gemini model, make sure you've set up the virtual environment correctly with `python -m venv venv` and installed the required packages. On non-Arch Linux systems, you can also modify the code to run without a virtual environment (see the commented code in `github_api.rs`).
+- **Build errors on Debian/Ubuntu:** If you encounter SSL-related errors during build, install required development packages: `sudo apt-get install pkg-config libssl-dev`
+- **Virtual environment issues:** If you encounter Python package import errors, make sure your Python environment is set up correctly with all required packages
+- **After installation:** Remember to restart your terminal or open a new terminal window after installation to ensure PATH changes take effect
+- **Re-installing:** If you need to reinstall or update dependencies, run the install script again: `./install.sh`
 
 - **If the error persists contact me via slack or create a github issue!!!:**
 

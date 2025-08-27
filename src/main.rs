@@ -23,6 +23,7 @@ use crate::github_api::{
       results   - Print test results from JSON file(s) in a clear terminal format.\n\
       grade     - Send JSON payloads to the Python AI API for grading and post feedback to GitHub.\n\
       feedback  - Print AI-generated feedback from JSON file(s) in a clear terminal format.\n\
+      issues    - Check GitHub issues for students and display their status (PASS, FAIL, KOMP, KOMPLETTERING).\n\
     \n\
     USAGE EXAMPLES:\n\
       grader help\n\
@@ -58,6 +59,10 @@ use crate::github_api::{
     \n\
       grader feedback -j/--json <path-to-feedback-json-or-dir>\n\
         Print AI-generated feedback from a JSON file or directory in a readable format.\n\
+    \n\
+      grader issues -s/--students <path-to-students.txt> -t/--task <task>\n\
+        Check GitHub issues for all students in a task and display their status (PASS, FAIL, KOMP, KOMPLETTERING).\n\
+        Shows a formatted table with student names and their issue status with corresponding emojis.\n\
     \n\
     Notes:\n\
       - All commands that clone or generate files require an explicit --output directory.\n\
