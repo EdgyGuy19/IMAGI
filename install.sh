@@ -182,45 +182,42 @@ update_github_api_rs() {
     echo "github_api.rs updated to use the virtual environment."
 }
 
-# Create startup script to activate environment and set variables
-create_startup_script() {
-    echo "Creating startup script..."
+# Set up environment variables in shell profile
+configure_environment() {
+    echo "Configuring environment variables..."
 
-    cat > start_ai_grader.sh << EOL
-#!/bin/bash
-# AI-Grader startup script
+    # Determine the project root directory
+    PROJECT_ROOT=$(pwd)
+    JARS_DIR=$(pwd)/jars
 
-# Activate Python virtual environment
-source venv/bin/activate
+    # Find appropriate shell profile file
+    SHELL_PROFILE=""
+    if [[ -f "$HOME/.bashrc" ]]; then
+        SHELL_PROFILE="$HOME/.bashrc"
+    elif [[ -f "$HOME/.zshrc" ]]; then
+        SHELL_PROFILE="$HOME/.zshrc"
+    elif [[ -f "$HOME/.profile" ]]; then
+        SHELL_PROFILE="$HOME/.profile"
+    fi
 
-# Set environment variables
-export AI_GRADER_ROOT=$(pwd)
-export AI_GRADER_JARS_DIR=$(pwd)/jars
-export PATH="\$HOME/.cargo/bin:\$PATH"
+    if [[ -n "$SHELL_PROFILE" ]]; then
+        echo "Adding environment variables to $SHELL_PROFILE"
 
-# Check for required environment variables
-if [ -z "\$GITHUB_TOKEN" ]; then
-    echo "⚠️ GITHUB_TOKEN environment variable not set"
-    echo "Please set it with: export GITHUB_TOKEN=your_github_token"
-fi
+        # Check if variables already exist in profile
+        if ! grep -q "AI_GRADER_ROOT" "$SHELL_PROFILE"; then
+            echo "export AI_GRADER_ROOT=\"$PROJECT_ROOT\"" >> "$SHELL_PROFILE"
+            echo "✅ Added AI_GRADER_ROOT to $SHELL_PROFILE"
+        fi
 
-if [ -z "\$GRADER_OPENAI_API_KEY" ] && [ -z "\$GRADER_GEMINI_API_KEY" ]; then
-    echo "⚠️ No API keys set for AI models"
-    echo "Set at least one of these:"
-    echo "export GRADER_OPENAI_API_KEY=your_openai_api_key"
-    echo "export GRADER_GEMINI_API_KEY=your_gemini_api_key"
-fi
-
-echo "AI-Grader environment ready!"
-echo "Run commands with: grader [command]"
-echo "When finished, deactivate the virtual environment with: deactivate"
-
-# Start a new shell with the environment loaded
-exec \$SHELL
-EOL
-
-    chmod +x start_ai_grader.sh
-    echo "Created start_ai_grader.sh script. Run it with: ./start_ai_grader.sh"
+        if ! grep -q "AI_GRADER_JARS_DIR" "$SHELL_PROFILE"; then
+            echo "export AI_GRADER_JARS_DIR=\"$JARS_DIR\"" >> "$SHELL_PROFILE"
+            echo "✅ Added AI_GRADER_JARS_DIR to $SHELL_PROFILE"
+        fi
+    else
+        echo "⚠️ Could not find shell profile file. Please add the following to your shell profile:"
+        echo "export AI_GRADER_ROOT=\"$PROJECT_ROOT\""
+        echo "export AI_GRADER_JARS_DIR=\"$JARS_DIR\""
+    fi
 }
 
 # Build and install the Rust CLI
@@ -263,25 +260,23 @@ install_system_dependencies
 setup_virtual_environment
 update_github_api_rs
 build_and_install_cli
-create_startup_script
+configure_environment
 
 # Final instructions
 echo
 echo "Installation complete!"
 echo
 echo "To use AI-Grader:"
-echo "1. Set your API keys:"
-echo "   export GITHUB_TOKEN=your_github_token"
-echo "   export GRADER_OPENAI_API_KEY=your_openai_api_key"
-echo "   export GRADER_GEMINI_API_KEY=your_gemini_api_key (optional)"
-echo
-echo "2. Start a new terminal session or source your profile:"
+echo "1. Start a new terminal session or source your profile:"
 echo "   source ~/.bashrc  # or ~/.zshrc depending on your shell"
 echo
-echo "3. Start the AI-Grader environment:"
-echo "   ./start_ai_grader.sh"
+echo "2. Set your API keys:"
+echo "   export GITHUB_TOKEN=your_github_token"
+echo "   export GRADER_OPENAI_API_KEY=your_openai_api_key"
+echo "   # or export GRADER_GEMINI_API_KEY=your_gemini_api_key"
 echo
-echo "4. Run grader commands, for example:"
+echo "3. Run grader commands from anywhere:"
 echo "   grader help"
+echo "   grader clone -s students.txt -t task-1 -o ./output"
 echo
 echo "Thank you for installing AI-Grader!"
