@@ -138,7 +138,7 @@ sudo apt-get install python3 python3-pip
 
 ```sh
 # For most systems:
-pip install fastapi uvicorn openai pydantic google-generativeai
+pip install fastapi uvicorn openai pydantic google-generativeai google-genai
 ```
 
 **On Arch Linux** (where pip packages can no longer be installed to the system root):
@@ -150,7 +150,7 @@ sudo pacman -Syu python-fastapi uvicorn python-openai python-pydantic
 cd AI_api
 python -m venv venv
 source venv/bin/activate
-pip install fastapi uvicorn openai pydantic google-generativeai
+pip install fastapi uvicorn openai pydantic google-generativeai google-genai
 cd ..
 ```
 
@@ -269,7 +269,7 @@ To use the Google Gemini model:
 
    **For most Linux distributions and macOS:**
    ```sh
-   pip install google-generativeai fastapi uvicorn pydantic
+   pip install google-generativeai fastapi uvicorn pydantic google-genai
    export GRADER_GEMINI_API_KEY=your_gemini_api_key
    ```
 
@@ -278,7 +278,7 @@ To use the Google Gemini model:
    cd AI_api
    python -m venv venv
    source venv/bin/activate
-   pip install google-generativeai fastapi uvicorn pydantic
+   pip install google-generativeai fastapi uvicorn pydantic google-genai
    cd ..
    export GRADER_GEMINI_API_KEY=your_gemini_api_key
    ```
@@ -441,7 +441,7 @@ This project is licensed under the MIT License.
 - **Developer:** Edgar Palynski ([EdgyGuy19](https://github.com/EdgyGuy19))
 - **Key Libraries:**
   - Rust: clap, serde, reqwest, tokio
-  - Python: fastapi, uvicorn, openai, google-generativeai, pydantic
+  - Python: fastapi, uvicorn, openai, google-generativeai, pydantic, google-genai
 - **Inspiration:** Created as a more efficient alternative to RepoBee
 
 *This project was developed to improve the assignment grading workflow for KTH teaching assistants.*
