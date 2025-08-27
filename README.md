@@ -64,7 +64,7 @@ This script has been tested on both Arch Linux and Ubuntu virtual machines to en
 **Important:** After installation, you should **restart your terminal** or open a new terminal window to ensure all PATH changes are applied.
 
 After restarting your terminal:
-1. Set up your API keys if you haven't already:
+1. Set up your API keys and Github Token if you haven't already:
    ```sh
    export GITHUB_TOKEN=your_github_token
    export GRADER_OPENAI_API_KEY=your_openai_api_key
