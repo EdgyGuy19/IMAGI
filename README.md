@@ -28,7 +28,7 @@ AI-Grader is a CLI tool that automates grading of Java assignments for KTH cours
 
 ### System Requirements
 
-- Linux or MacOS (tested on Arch Linux)
+- Linux or MacOS (tested on Arch Linux and Ubuntu VM)
 - Rust (via [rustup](https://rustup.rs/))
 - Python 3.9+
 - Java JDK (javac, java)
@@ -127,8 +127,11 @@ The installation script will:
 1. Detect your operating system and package manager
 2. Install all necessary dependencies (Python, Rust, Java, Git, etc.)
 3. Set up a Python virtual environment
-4. Build and install the AI-Grader CLI globally
-5. Configure your PATH to make the `grader` command available
+4. Set up a Python virtual environment in the AI_api directory
+5. Build and install the AI-Grader CLI globally
+6. Configure your PATH to make the `grader` command available
+
+This script has been tested on both Arch Linux and Ubuntu virtual machines to ensure cross-distribution compatibility.
 
 **Important:** After installation, you should **restart your terminal** or open a new terminal window to ensure all PATH changes are applied.
 
@@ -233,18 +236,20 @@ To use the Google Gemini model:
 3. Save it securely and add it to your environment variables as shown above
 4. Set up a Python virtual environment for Gemini(In a virtual environment if on arch):
 
-**These commands below are only if you want to run gemini in virtual environment(needed on arch). Do not use these if it is not required by your OS. Run these command from AI-Api directory.**
+**These commands below are only if you want to run gemini in virtual environment(needed on arch). Do not use these if it is not required by your OS. Run these commands from AI_api directory.**
 ```sh
+cd AI_api
 python -m venv venv
 source venv/bin/activate
 pip install google-generativeai fastapi uvicorn pydantic
+cd ..
 ```
 
 **Note for non-Arch Linux systems:** If your system allows installing Python packages globally, you can skip the virtual environment setup and install the required packages directly:
 
 ```sh
 # For Ubuntu/Debian and other systems where global pip installations work:
-pip install google-generativeai google-genai fastapi uvicorn pydantic
+pip install google-generativeai fastapi uvicorn pydantic
 ```
 
 The code includes commented sections for running without a virtual environment that you can uncomment if needed.
@@ -360,7 +365,7 @@ AI-Grader/
 - **Missing environment variables:** Ensure you have set `AI_GRADER_ROOT`, `GITHUB_TOKEN`, `AI_GRADER_JARS_DIR`, and either `GRADER_OPENAI_API_KEY` or `GRADER_GEMINI_API_KEY` (depending on your chosen model) before running the CLI.
 - **Gemini API errors:** If using the Gemini model, make sure you've set up the virtual environment correctly with `python -m venv venv` and installed the required packages. On non-Arch Linux systems, you can also modify the code to run without a virtual environment (see the commented code in `github_api.rs`).
 - **Build errors on Debian/Ubuntu:** If you encounter SSL-related errors during build, install required development packages: `sudo apt-get install pkg-config libssl-dev`
-- **Virtual environment issues:** If you encounter Python package import errors, make sure your Python environment is set up correctly with all required packages
+- **Virtual environment issues:** If you encounter Python package import errors, make sure the virtual environment in the AI_api directory is set up correctly with all required packages
 - **After installation:** Remember to restart your terminal or open a new terminal window after installation to ensure PATH changes take effect
 - **Re-installing:** If you need to reinstall or update dependencies, run the install script again: `./install.sh`
 

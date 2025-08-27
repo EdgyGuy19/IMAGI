@@ -142,13 +142,13 @@ install_system_dependencies() {
 setup_virtual_environment() {
     echo "Setting up Python virtual environment..."
 
-    # Create virtual environment if it doesn't exist
-    if [ ! -d "venv" ]; then
-        python3 -m venv venv || python -m venv venv
-    fi
+    # Create virtual environment in AI_api directory if it doesn't exist
+        if [ ! -d "AI_api/venv" ]; then
+            (cd AI_api && python3 -m venv venv) || (cd AI_api && python -m venv venv)
+        fi
 
-    # Activate virtual environment
-    source venv/bin/activate
+        # Activate virtual environment
+        source AI_api/venv/bin/activate
 
     # Upgrade pip
     pip install --upgrade pip
@@ -161,26 +161,8 @@ setup_virtual_environment() {
     deactivate
 }
 
-# Update the github_api.rs file to use the venv for all Python API calls
-update_github_api_rs() {
-    echo "Updating github_api.rs to use the virtual environment..."
-
-    # Backup the original file
-    cp src/github_api.rs src/github_api.rs.bak
-
-    # Use sed to update the file (commands will vary slightly for macOS vs Linux)
-    if [[ "$OS" == "mac" ]]; then
-        # macOS version of sed
-        sed -i '' 's|Command::new("python")|Command::new("./venv/bin/python")|g' src/github_api.rs
-        sed -i '' 's|Command::new(project_root.join("AI_api/venv/bin/python"))|Command::new(project_root.join("venv/bin/python"))|g' src/github_api.rs
-    else
-        # GNU/Linux version of sed
-        sed -i 's|Command::new("python")|Command::new("./venv/bin/python")|g' src/github_api.rs
-        sed -i 's|Command::new(project_root.join("AI_api/venv/bin/python"))|Command::new(project_root.join("venv/bin/python"))|g' src/github_api.rs
-    fi
-
-    echo "github_api.rs updated to use the virtual environment."
-}
+# The github_api.rs file already uses the correct virtual environment path
+# No modification needed for github_api.rs
 
 # Set up environment variables in shell profile
 configure_environment() {
@@ -189,6 +171,7 @@ configure_environment() {
     # Determine the project root directory
     PROJECT_ROOT=$(pwd)
     JARS_DIR=$(pwd)/jars
+    AI_API_DIR=$(pwd)/AI_api
 
     # Find appropriate shell profile file
     SHELL_PROFILE=""
@@ -258,7 +241,6 @@ detect_environment
 handle_unknown_distribution
 install_system_dependencies
 setup_virtual_environment
-update_github_api_rs
 build_and_install_cli
 configure_environment
 
