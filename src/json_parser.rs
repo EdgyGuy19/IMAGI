@@ -32,13 +32,13 @@ pub struct Issue {
     title: String,
     body: String,
 }
-
+//struct for getting status for issues
 #[derive(Serialize, Deserialize)]
 pub struct StatusIssue {
     pub studentid: String,
     pub status: String,
 }
-
+//struct for using github API to get issues statuses
 #[derive(Serialize, Deserialize)]
 pub struct IssueTitle {
     pub title: String,
