@@ -214,6 +214,42 @@ export AI_GRADER_JARS_DIR=/path/to/jars/directory
 
 ## Configuration
 
+### Prompt Templates Customization
+
+AI-Grader uses two prompt template files in the `AI_api` directory to generate feedback:
+
+- `student.txt`: Controls the format and content of student-facing feedback posted to GitHub issues
+- `teacher.txt`: Used internally for more detailed pedagogical analysis (not shown to students)
+
+By default, the system uses the `student.txt` prompt for generating feedback. This can be seen in both the OpenAI and Gemini API code:
+
+![GPT API using student.txt](pics/gpt_prompt.png)
+
+![Gemini API using student.txt](pics/gemini_prompt.png)
+
+To customize these templates:
+
+1. Navigate to the `AI_api` directory in your AI-Grader installation
+2. Edit the appropriate file with a text editor:
+   ```sh
+   # To customize student feedback format
+   nano AI_api/student.txt
+   
+   # To customize teacher analysis format
+   nano AI_api/teacher.txt
+   ```
+3. When editing, follow these guidelines:
+   - Preserve the `{}` placeholders (they insert task descriptions, code, and test results)
+   - For student.txt, maintain the "Improvements:" section with checkbox format
+   - Test your changes with a small batch of submissions first
+
+4. To switch between student and teacher prompts:
+   - Edit the API code files in the `AI_api` directory
+   - In `gptAPI.py` and `geminiAPI.py`, locate the lines that open the prompt file
+   - Change `open("AI_api/student.txt")` to `open("AI_api/teacher.txt")` to use the teacher prompt
+
+**Note:** You're responsible for maintaining the quality and educational value of custom prompts. Using the teacher prompt will provide more detailed analysis but may not format correctly for GitHub issues.
+
 ### Environment Variables
 
 Guide for setting up environment variables: [How to set environment variables](https://www.twilio.com/en-us/blog/how-to-set-environment-variables-html)
@@ -315,6 +351,31 @@ charlie
 - `feedback`  - Print AI-generated feedback from JSON file(s) in a clear terminal format.
 - `issues`    - Check GitHub issues for students' repositories and display their status (PASS, FAIL, KOMP, KOMPLETTERING).
 
+The AI-Grader uses two different prompt templates located in the `AI_api` directory:
+- `student.txt` - Template used to generate student-facing feedback (concise, actionable improvements with checkboxes)
+- `teacher.txt` - Template used for more detailed pedagogical analysis (available to teachers only, not shown to students)
+
+For information on customizing these templates, see the [Prompt Templates Customization](#prompt-templates-customization) section.
+
+### Example of Posted GitHub Issues
+
+When you run the `grade` command, AI-Grader creates GitHub issues with feedback for students. Here are actual examples of how these issues appear:
+
+#### Standard Issue (Without Teacher's Note)
+
+![Example issue without teacher's note](pics/no_teacher_note.png)
+
+#### Issue With Teacher's Note
+
+![Example issue with teacher's note](pics/teachers_note.png)
+
+The checkboxes allow students to track their progress as they address each improvement point. The "AI Suggestions" section is always included, while the "Teacher's note" section appears only when you choose to add your own feedback.
+
+During the grading process, after seeing the AI-generated feedback for each student, you'll be prompted:
+1. Whether to create a GitHub issue or just save the feedback locally
+2. If creating an issue, whether to add your own teacher notes
+3. If adding notes, you can type multi-line feedback (ending with 'DONE')
+
 ### Help Output
 
 Run `grader help` to see all commands, options and how each command works.
@@ -360,6 +421,15 @@ grader grade -j ./output/task-1/compiled/json_files -o ./feedback -m gemini
 # or with long options:
 grader grade --json ./output/task-1/compiled/json_files --output ./feedback --model gemini
 # (On Arch Linux, this requires a virtual environment. On other systems, you can modify github_api.rs to use system Python)
+
+# Interactive prompts during grading:
+# For each student, you'll see:
+#   1. Generated AI feedback (using student.txt prompt by default)
+#   2. Prompt: "Would you like to create a GitHub issue for this student? [y/n]"
+#   3. If yes: "Would you like to add your own feedback before creating the issue? [y/n]"
+#   4. If yes: You can type your teacher's notes (type 'DONE' when finished on new line)
+# 
+# Note: To use the teacher.txt prompt instead, modify the API code files as shown in the Configuration section
 
 # Print AI-generated feedback from JSON files
 grader feedback -j ./feedback
