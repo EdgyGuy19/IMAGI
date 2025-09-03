@@ -228,11 +228,11 @@ AI-Grader uses two prompt template files in the `AI_api` directory to generate f
 - `student.txt`: Controls the format and content of student-facing feedback posted to GitHub issues
 - `teacher.txt`: Used internally for more detailed pedagogical analysis (not shown to students)
 
-By default, the system uses the `student.txt` prompt for generating feedback. This can be seen in both the OpenAI and Gemini API code:
+By default, the system uses the `student.txt` prompt for generating feedback. This can be seen in both the API code files:
 
-![GPT API using student.txt](pics/gpt_prompt.png)
+![OpenAI GPT API code (gptAPI.py) using student.txt prompt](pics/gpt_prompt.png)
 
-![Gemini API using student.txt](pics/gemini_prompt.png)
+![Google Gemini API code (geminiAPI.py) using student.txt prompt](pics/gemini_prompt.png)
 
 To customize these templates:
 
@@ -251,8 +251,9 @@ To customize these templates:
    - Test your changes with a small batch of submissions first
 
 4. To switch between student and teacher prompts:
-   - Edit the API code files in the `AI_api` directory
-   - In `gptAPI.py` and `geminiAPI.py`, locate the lines that open the prompt file
+   - Edit the API code files in the `AI_api` directory:
+     - In `gptAPI.py` (OpenAI implementation): Change line shown in the first screenshot
+     - In `geminiAPI.py` (Google Gemini implementation): Change line shown in the second screenshot
    - Change `open("AI_api/student.txt")` to `open("AI_api/teacher.txt")` to use the teacher prompt
 
 **Note:** You're responsible for maintaining the quality and educational value of custom prompts. Using the teacher prompt will provide more detailed analysis but may not format correctly for GitHub issues.
