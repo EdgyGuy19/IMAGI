@@ -232,11 +232,9 @@ By default, the system uses the `student.txt` prompt for generating feedback. Th
 
 **File: `AI_api/gptAPI.py` (OpenAI implementation)**
 ![OpenAI GPT API code showing student.txt prompt selection](pics/gpt_prompt.png)
-**File: `AI_api/gptAPI.py` (OpenAI implementation)**
 
 **File: `AI_api/geminiAPI.py` (Google Gemini implementation)**
 ![Google Gemini API code showing student.txt prompt selection](pics/gemini_prompt.png)
-**File: `AI_api/geminiAPI.py` (Google Gemini implementation)**
 
 To customize these templates:
 
@@ -529,6 +527,4 @@ This project is licensed under the MIT License.
 - **Key Libraries:**
   - Rust: clap, serde, reqwest, tokio
   - Python: fastapi, uvicorn, openai, google-generativeai, pydantic, google-genai
-- **Inspiration:** Created as a more efficient alternative to RepoBee
-
-*This project was developed to improve the assignment grading workflow for KTH teaching assistants.*
+- **Inspiration:** Being a certified repobee hater
