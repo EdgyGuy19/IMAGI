@@ -230,9 +230,13 @@ AI-Grader uses two prompt template files in the `AI_api` directory to generate f
 
 By default, the system uses the `student.txt` prompt for generating feedback. This can be seen in both the API code files:
 
-![OpenAI GPT API code (gptAPI.py) using student.txt prompt](pics/gpt_prompt.png)
+**File: `AI_api/gptAPI.py` (OpenAI implementation)**
+![OpenAI GPT API code showing student.txt prompt selection](pics/gpt_prompt.png)
+**File: `AI_api/gptAPI.py` (OpenAI implementation)**
 
-![Google Gemini API code (geminiAPI.py) using student.txt prompt](pics/gemini_prompt.png)
+**File: `AI_api/geminiAPI.py` (Google Gemini implementation)**
+![Google Gemini API code showing student.txt prompt selection](pics/gemini_prompt.png)
+**File: `AI_api/geminiAPI.py` (Google Gemini implementation)**
 
 To customize these templates:
 
@@ -241,7 +245,7 @@ To customize these templates:
    ```sh
    # To customize student feedback format
    nano AI_api/student.txt
-   
+
    # To customize teacher analysis format
    nano AI_api/teacher.txt
    ```
@@ -252,11 +256,16 @@ To customize these templates:
 
 4. To switch between student and teacher prompts:
    - Edit the API code files in the `AI_api` directory:
-     - In `gptAPI.py` (OpenAI implementation): Change line shown in the first screenshot
-     - In `geminiAPI.py` (Google Gemini implementation): Change line shown in the second screenshot
-   - Change `open("AI_api/student.txt")` to `open("AI_api/teacher.txt")` to use the teacher prompt
+     - In `gptAPI.py` (OpenAI implementation): Locate the line `with open("AI_api/student.txt") as f:`
+     - In `geminiAPI.py` (Google Gemini implementation): Locate the line `with open("AI_api/student.txt") as f:`
+   - Change `"AI_api/student.txt"` to `"AI_api/teacher.txt"` in both files to use the teacher prompt instead
+   - Save the files and restart the grading process for changes to take effect
 
-**Note:** You're responsible for maintaining the quality and educational value of custom prompts. Using the teacher prompt will provide more detailed analysis but may not format correctly for GitHub issues.
+**Important Notes:**
+- You're responsible for maintaining the quality and educational value of custom prompts
+- Using the teacher prompt will provide more detailed pedagogical analysis
+- The teacher prompt output may not format correctly for GitHub issues as it's designed for teacher consumption
+- After changing prompts, test with a small sample before using in production
 
 ### Environment Variables
 
@@ -436,7 +445,7 @@ grader grade --json ./output/task-1/compiled/json_files --output ./feedback --mo
 #   2. Prompt: "Would you like to create a GitHub issue for this student? [y/n]"
 #   3. If yes: "Would you like to add your own feedback before creating the issue? [y/n]"
 #   4. If yes: You can type your teacher's notes (type 'DONE' when finished on new line)
-# 
+#
 # Note: To use the teacher.txt prompt instead, modify the API code files as shown in the Configuration section
 
 # Print AI-generated feedback from JSON files
