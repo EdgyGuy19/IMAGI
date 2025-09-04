@@ -42,7 +42,7 @@ pub fn clone_repos(
     // Create ./task directory
     let repos_dir = output_dir.join(&task);
     std::fs::create_dir_all(&repos_dir)?;
-    let base_url = "git@gits-15.sys.kth.se:inda-24/";
+    let base_url = "git@gits-15.sys.kth.se:inda-25/";
     for student in students_list {
         // Build repo URL and destination directory
         let student_url = format!("{}{}-{}.git", base_url, student, task);
@@ -610,7 +610,7 @@ async fn send_issue(
     feedback: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let token = env::var("GITHUB_TOKEN").expect("Set the GITHUB_TOKEN environment variable");
-    let org = "inda-24";
+    let org = "inda-25";
     let repo = format!("{}-{}", student, task);
     let url = format!(
         "https://gits-15.sys.kth.se/api/v3/repos/{}/{}/issues",
@@ -681,7 +681,7 @@ pub async fn check_issues(
         }
         students_list.push(student);
     }
-    let org = "inda-24";
+    let org = "inda-25";
     for student in students_list {
         let repo = format!("{}-{}", student, task);
         let url = format!(
