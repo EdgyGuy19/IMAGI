@@ -6,11 +6,19 @@ AI-Grader is a CLI tool that automates grading of Java assignments for KTH cours
 
 - [Features](#features)
 - [Installation](#installation)
+  - [System Requirements](#system-requirements)
+  - [Automated Installation (Recommended)](#automated-installation-recommended)
+    - [Prerequisites](#prerequisites)
+  - [Manual Installation](#manual-installation)
 - [Configuration](#configuration)
   - [Prompt Templates Customization](#prompt-templates-customization)
   - [Environment Variables](#environment-variables)
   - [API Keys and Tokens](#api-keys-and-tokens)
-  - [Google Gemini API Key](#google-gemini-api-key)
+  - [Getting API Keys](#getting-api-keys)
+    - [OpenAI API Key](#openai-api-key)
+    - [Google Gemini API Key](#google-gemini-api-key)
+  - [Creating a GitHub Token](#creating-a-github-token)
+  - [Input Files](#input-files)
 - [Usage](#usage)
   - [CLI Commands](#cli-commands)
   - [Example of Posted GitHub Issues](#example-of-posted-github-issues)
@@ -46,6 +54,27 @@ There are two methods to install AI-Grader:
 - Git
 
 ### Automated Installation (Recommended)
+
+#### Prerequisites
+
+Before running the automated installation script, please ensure you have:
+
+1. **SSH key set up for GitHub**: Required for authenticating with GitHub repositories
+   - Generate an SSH key: [GitHub Guide: Generating a new SSH key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
+   - Add it to your GitHub account: [GitHub Guide: Adding a new SSH key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
+   - Test your SSH connection: `ssh -T git@github.com`
+
+2. **Git** installed on your system
+   - Most systems: `sudo apt-get install git` or equivalent for your package manager
+
+3. **Access permissions** to:
+   - `inda-master` organization repositories (for solution code)
+   - `inda-xx` organization repositories (for student submissions, where "xx" is the year number, e.g., "inda-25")
+
+   **Note:** The repository name `inda-xx` is hardcoded in the application. You will need to modify the source code to update this value each academic year in the following locations:
+   - `src/github_api.rs`, line ~45: `let base_url = "git@gits-15.sys.kth.se:inda-25/";`
+   - `src/github_api.rs`, line ~612: `let org = "inda-25";`
+   - `src/github_api.rs`, line ~682: `let org = "inda-25";`
 
 The easiest way to install AI-Grader is to use our installation script:
 
@@ -130,33 +159,27 @@ cargo --version
 
 **Install Python (3.9 or newer):**
 
-On Linux (Arch example):
+On Linux:
 ```sh
-sudo pacman -S python python-pip
-```
-
-On Ubuntu/Debian:
-```sh
+# Ubuntu/Debian
 sudo apt-get update
 sudo apt-get install python3 python3-pip
+# Arch Linux
+sudo pacman -S python python-pip
+
+# Fedora
+sudo dnf install python3 python3-pip
 ```
 
-**Install Python packages:**
+**Install Python packages using a virtual environment:**
 
 ```sh
-# For most systems:
-pip install fastapi uvicorn openai pydantic google-generativeai google-genai
-```
-
-**On Arch Linux** (where pip packages can no longer be installed to the system root):
-```sh
-# Option 1: Use pacman packages
-sudo pacman -Syu python-fastapi uvicorn python-openai python-pydantic
-
-# Option 2: Use a virtual environment (required for Gemini API)
+# Create and activate virtual environment
 cd AI_api
 python -m venv venv
 source venv/bin/activate
+
+# Install required packages
 pip install fastapi uvicorn openai pydantic google-generativeai google-genai
 cd ..
 ```
@@ -267,24 +290,14 @@ To customize these templates:
 
 ### Environment Variables
 
-Guide for setting up environment variables: [How to set environment variables](https://www.twilio.com/en-us/blog/how-to-set-environment-variables-html)
+AI-Grader requires the following environment variables:
 
-### Getting API Keys
+- `AI_GRADER_ROOT`: Path to the directory containing the AI-Grader project (with the `AI_api` folder)
+- `AI_GRADER_JARS_DIR`: Path to the directory containing JUnit and Hamcrest JAR files
+- `GITHUB_TOKEN`: Your GitHub personal access token for repository access and issue creation
+- `GRADER_OPENAI_API_KEY` or `GRADER_GEMINI_API_KEY`: API key for your chosen AI service
 
-#### OpenAI API Key
-How to get your own OpenAI API key:[Guide for creating API Key](https://medium.com/@lorenzozar/how-to-get-your-own-openai-api-key-f4d44e60c327)
-
-### Creating a GitHub Token
-
-To create a GitHub token:
-
-1. Go to [GitHub Settings > Developer settings > Personal access tokens](https://github.com/settings/tokens).
-2. Click "Generate new token".
-3. Select the required scopes (e.g., `repo`, `workflow`).
-4. Copy and save your token securely.
-
-For more details, see [GitHub Docs: Creating a personal access token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token).
-![GitHub Token Requirements](pics/Token.png)
+For help setting up environment variables: [How to set environment variables](https://www.twilio.com/en-us/blog/how-to-set-environment-variables-html)
 
 ### API Keys and Tokens
 
@@ -298,8 +311,12 @@ export GRADER_GEMINI_API_KEY=your_gemini_api_key
 ```
 
 **Important:**
-- The `AI_GRADER_ROOT` variable must point to the directory containing the `AI_api` folder. This is required for the `grade` command to work from any directory.
 - You must set either the OpenAI API key or Gemini API key depending on which model you plan to use.
+
+### Getting API Keys
+
+#### OpenAI API Key
+How to get your own OpenAI API key: [Guide for creating API Key](https://medium.com/@lorenzozar/how-to-get-your-own-openai-api-key-f4d44e60c327)
 
 #### Google Gemini API Key
 
@@ -307,32 +324,18 @@ To use the Google Gemini model:
 1. Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
 2. Create a new API key
 3. Save it securely and add it to your environment variables as shown above
-4. Set up a Python virtual environment for Gemini(In a virtual environment if on arch):
 
-To use the Google Gemini model:
+### Creating a GitHub Token
 
-1. **Get an API key:**
-   - Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - Create a new API key
-   - Save it securely
+To create a GitHub token:
 
-2. **Set up environment:**
+1. Go to [GitHub Settings > Developer settings > Personal access tokens](https://github.com/settings/tokens).
+2. Click "Generate new token".
+3. Select the required scopes (e.g., `repo`, `workflow`).
+4. Copy and save your token securely.
 
-   **For most Linux distributions and macOS:**
-   ```sh
-   pip install google-generativeai fastapi uvicorn pydantic google-genai
-   export GRADER_GEMINI_API_KEY=your_gemini_api_key
-   ```
-
-   **For Arch Linux** (where a virtual environment is required):
-   ```sh
-   cd AI_api
-   python -m venv venv
-   source venv/bin/activate
-   pip install google-generativeai fastapi uvicorn pydantic google-genai
-   cd ..
-   export GRADER_GEMINI_API_KEY=your_gemini_api_key
-   ```
+For more details, see [GitHub Docs: Creating a personal access token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token).
+![GitHub Token Requirements](pics/Token.png)
 
 The code includes commented sections for running without a virtual environment that you can uncomment if needed.
 
