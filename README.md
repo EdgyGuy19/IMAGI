@@ -68,7 +68,7 @@ Before running the automated installation script, please ensure you have:
    - `inda-master` organization repositories (for solution code)
    - `inda-xx` organization repositories (for student submissions, where "xx" is the year number, e.g., "inda-25")
 
-   **Note:** The repository name `inda-xx` is hardcoded in the application. You will need to modify the source code to update this value each academic year in the following locations:
+   **Note:** The organization name `inda-xx` is hardcoded in the application. You will need to modify the source code to update this value each academic year in the following locations:
    - `src/github_api.rs`, line ~45: `let base_url = "git@gits-15.sys.kth.se:inda-25/";`
    - `src/github_api.rs`, line ~612: `let org = "inda-25";`
    - `src/github_api.rs`, line ~682: `let org = "inda-25";`
