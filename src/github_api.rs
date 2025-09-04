@@ -753,55 +753,55 @@ pub async fn check_issues(
     Ok(())
 }
 
-pub fn golang_run(
-    students_src: &Path,
-    tests_dir: &Path,
-) -> Result<String, Box<dyn std::error::Error>> {
-    let mut test_files_to_move = Vec::new();
-    for entry in fs::read_dir(students_src)? {
-        let entry = entry?;
-        let path = entry.path();
-        if path.is_file() {
-            if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                if name.contains("Test.java") {
-                    test_files_to_move.push((path.clone(), name.to_string()));
-                }
-            }
-        }
-    }
-    if !test_files_to_move.is_empty() {
-        let student_tests_dir = students_src.join("student_tests");
-        fs::create_dir_all(&student_tests_dir)?;
-        for (path, name) in test_files_to_move {
-            let dest = student_tests_dir.join(name);
-            fs::rename(&path, &dest)?;
-        }
-    }
+// pub fn golang_run(
+//     students_src: &Path,
+//     tests_dir: &Path,
+// ) -> Result<String, Box<dyn std::error::Error>> {
+//     let mut test_files_to_move = Vec::new();
+//     for entry in fs::read_dir(students_src)? {
+//         let entry = entry?;
+//         let path = entry.path();
+//         if path.is_file() {
+//             if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+//                 if name.contains("Test.java") {
+//                     test_files_to_move.push((path.clone(), name.to_string()));
+//                 }
+//             }
+//         }
+//     }
+//     if !test_files_to_move.is_empty() {
+//         let student_tests_dir = students_src.join("student_tests");
+//         fs::create_dir_all(&student_tests_dir)?;
+//         for (path, name) in test_files_to_move {
+//             let dest = student_tests_dir.join(name);
+//             fs::rename(&path, &dest)?;
+//         }
+//     }
 
-    for entry in fs::read_dir(tests_dir)? {
-        let entry = entry?;
-        let path = entry.path();
-        if path.is_file() {
-            if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                if name.ends_with("Test.java")
-                    || name.ends_with("Tests.java")
-                    || name.ends_with("test.go")
-                    || name.ends_with("Test.go")
-                {
-                    let dest = students_src.join(name);
-                    fs::copy(&path, &dest)?;
-                }
-            }
-        }
-    }
-    let run = Command::new("sh")
-        .arg("-c")
-        .arg("go test")
-        .current_dir(students_src)
-        .output()?;
+//     for entry in fs::read_dir(tests_dir)? {
+//         let entry = entry?;
+//         let path = entry.path();
+//         if path.is_file() {
+//             if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+//                 if name.ends_with("Test.java")
+//                     || name.ends_with("Tests.java")
+//                     || name.ends_with("test.go")
+//                     || name.ends_with("Test.go")
+//                 {
+//                     let dest = students_src.join(name);
+//                     fs::copy(&path, &dest)?;
+//                 }
+//             }
+//         }
+//     }
+//     let run = Command::new("sh")
+//         .arg("-c")
+//         .arg("go test")
+//         .current_dir(students_src)
+//         .output()?;
 
-    let stdout = String::from_utf8_lossy(&run.stdout);
-    let stderr = String::from_utf8_lossy(&run.stderr);
+//     let stdout = String::from_utf8_lossy(&run.stdout);
+//     let stderr = String::from_utf8_lossy(&run.stderr);
 
-    Ok(format!("{}\n{}", stdout, stderr))
-}
+//     Ok(format!("{}\n{}", stdout, stderr))
+// }
