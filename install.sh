@@ -155,7 +155,7 @@ setup_virtual_environment() {
 
     # Install Python dependencies
     echo "Installing Python packages in virtual environment..."
-    pip install fastapi uvicorn openai pydantic google-generativeai
+    pip install fastapi uvicorn openai pydantic google-genai
 
     # Deactivate virtual environment
     deactivate
