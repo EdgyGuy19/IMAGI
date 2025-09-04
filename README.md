@@ -64,10 +64,7 @@ Before running the automated installation script, please ensure you have:
    - Add it to your GitHub account: [GitHub Guide: Adding a new SSH key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
    - Test your SSH connection: `ssh -T git@github.com`
 
-2. **Git** installed on your system
-   - Most systems: `sudo apt-get install git` or equivalent for your package manager
-
-3. **Access permissions** to:
+2. **Access permissions** to:
    - `inda-master` organization repositories (for solution code)
    - `inda-xx` organization repositories (for student submissions, where "xx" is the year number, e.g., "inda-25")
 
