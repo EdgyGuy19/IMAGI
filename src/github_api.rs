@@ -420,7 +420,7 @@ pub async fn send_payload(
         // Check if venv exists (required for Gemini API, especially on Arch Linux)
         let venv_python = project_root.join("AI_api/venv/bin/python");
         if !venv_python.exists() {
-            return Err("Virtual environment not found for Gemini API. Please create it using:\n\npython -m venv venv\nsource venv/bin/activate\npip install google-generativeai fastapi uvicorn\n\nAlternatively, edit github_api.rs to use system Python if your distro supports it.".into());
+            return Err("Virtual environment not found for Gemini API. Please create it using:\n\npython -m venv venv\nsource venv/bin/activate\npip install google-genai fastapi uvicorn\n\nAlternatively, edit github_api.rs to use system Python if your distro supports it.".into());
         }
 
         // Use Python from venv to run the server with geminiAPI module
@@ -435,7 +435,7 @@ pub async fn send_payload(
         //
         // On Arch Linux, pip packages cannot be installed system-wide, so we use venv.
         // On Ubuntu/Debian and other systems where pip allows global installs, you can use this instead.
-        // Remember to install the required packages with: pip install google-generativeai fastapi uvicorn
+        // Remember to install the required packages with: pip install google-genai fastapi uvicorn
         //
         // Command::new("python")
         //     .arg("-m")
