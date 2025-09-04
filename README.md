@@ -177,7 +177,7 @@ python -m venv venv
 source venv/bin/activate
 
 # Install required packages
-pip install fastapi uvicorn openai pydantic google-generativeai google-genai
+pip install fastapi uvicorn openai pydantic google-genai
 cd ..
 ```
 
@@ -526,5 +526,5 @@ This project is licensed under the MIT License.
 - **Developer:** Edgar Palynski ([EdgyGuy19](https://github.com/EdgyGuy19))
 - **Key Libraries:**
   - Rust: clap, serde, reqwest, tokio
-  - Python: fastapi, uvicorn, openai, google-generativeai, pydantic, google-genai
+  - Python: fastapi, uvicorn, openai, google-genai, pydantic
 - **Inspiration:** Being a certified repobee hater
