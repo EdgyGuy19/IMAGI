@@ -48,6 +48,7 @@ There are two methods to install AI-Grader:
 ### System Requirements
 
 - Linux or MacOS (tested on Arch Linux and Ubuntu VM)
+- Windows Subsystem for Linux (WSL) is also supported
 - Rust (via [rustup](https://rustup.rs/))
 - Python 3.9+
 - Java JDK (javac, java)
@@ -248,6 +249,8 @@ AI-Grader uses two prompt template files in the `AI_api` directory to generate f
 - `student.txt`: Controls the format and content of student-facing feedback posted to GitHub issues
 - `teacher.txt`: Used internally for more detailed pedagogical analysis (not shown to students)
 
+**IMPORTANT: Do not change the structure or output format of the prompts.** You may adjust the content, tone, or guidance, but the output format with "Improvements:" and checkboxes must be preserved for proper functioning.
+
 By default, the system uses the `student.txt` prompt for generating feedback. This can be seen in both the API code files:
 
 **File: `AI_api/gptAPI.py` (OpenAI implementation)**
@@ -267,9 +270,10 @@ To customize these templates:
    # To customize teacher analysis format
    nano AI_api/teacher.txt
    ```
-3. When editing, follow these guidelines:
+3. When editing, follow these strict guidelines:
    - Preserve the `{}` placeholders (they insert task descriptions, code, and test results)
-   - For student.txt, maintain the "Improvements:" section with checkbox format
+   - DO NOT change the output format structure (especially the "Improvements:" section with checkboxes)
+   - You may adjust tone, wording, or guidance details, but not the structural format
    - Test your changes with a small batch of submissions first
 
 4. To switch between student and teacher prompts:
@@ -281,9 +285,11 @@ To customize these templates:
 
 **Important Notes:**
 - You're responsible for maintaining the quality and educational value of custom prompts
+- DO NOT change the structural format or output structure of either prompt
 - Using the teacher prompt will provide more detailed pedagogical analysis
 - The teacher prompt output may not format correctly for GitHub issues as it's designed for teacher consumption
 - After changing prompts, test with a small sample before using in production
+- Note that comments in student code are automatically removed before processing
 
 ### Environment Variables
 
@@ -384,7 +390,7 @@ When you run the `grade` command, AI-Grader creates GitHub issues with feedback 
 
 ![Example issue with teacher's note](pics/teachers_note.png)
 
-The checkboxes allow students to track their progress as they address each improvement point. The "AI Suggestions" section is always included, while the "Teacher's note" section appears only when you choose to add your own feedback.
+The checkboxes allow students to track their progress as they address each improvement point. The "AI Suggestions" section is always included, while the "Teacher's note" section appears only when you choose to add your own feedback. **Important:** These suggestions are NOT a mandatory to-do list - they're optional improvements that students can consider to enhance their understanding and code quality.
 
 During the grading process, after seeing the AI-generated feedback for each student, you'll be prompted:
 1. Whether to create a GitHub issue or just save the feedback locally
@@ -489,6 +495,8 @@ AI-Grader/
 - **Missing environment variables:** Verify you've set `AI_GRADER_ROOT`, `GITHUB_TOKEN`, `AI_GRADER_JARS_DIR`, and either `GRADER_OPENAI_API_KEY` or `GRADER_GEMINI_API_KEY`
 - **After installation:** Remember to restart your terminal to ensure PATH changes take effect
 - **Re-installing:** To reinstall or update dependencies, run `./install.sh` again
+- **WSL considerations:** When using WSL, ensure SSH keys are properly set up and added to the SSH agent in the Linux environment
+
 
 #### Java and Compilation Issues
 - **Java compilation failed:** Check that JDK and JAR files are present with correct paths

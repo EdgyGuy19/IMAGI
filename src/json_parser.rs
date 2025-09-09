@@ -101,11 +101,74 @@ pub fn parse_source_file(
     content: &Path,
 ) -> Result<SourceFile, Box<dyn std::error::Error>> {
     let content_json = std::fs::read_to_string(content)?;
+
+    // Remove Java comments before sending to API
+    let content_without_comments = remove_comments(&content_json);
+
     let source_file = SourceFile {
         filename: filename.to_string(),
-        content: content_json,
+        content: content_without_comments,
     };
     Ok(source_file)
+}
+
+// Removes Java comments from code
+fn remove_comments(code: &str) -> String {
+    let mut result = String::new();
+    let mut chars = code.chars().peekable();
+    let mut in_block_comment = false;
+    let mut in_line_comment = false;
+    let mut in_string = false;
+
+    while let Some(c) = chars.next() {
+        if in_block_comment {
+            if c == '*' && chars.peek() == Some(&'/') {
+                chars.next(); // consume the '/'
+                in_block_comment = false;
+                result.push(' '); // preserve spacing
+            }
+            continue;
+        } else if in_line_comment {
+            if c == '\n' {
+                in_line_comment = false;
+                result.push(c); // keep the newline
+            }
+            continue;
+        } else if in_string {
+            result.push(c);
+            if c == '\\' && chars.peek().is_some() {
+                // Handle escape sequence
+                if let Some(next) = chars.next() {
+                    result.push(next);
+                }
+            } else if c == '"' {
+                in_string = false;
+            }
+        } else {
+            match c {
+                '/' => {
+                    if chars.peek() == Some(&'/') {
+                        chars.next(); // consume the second '/'
+                        in_line_comment = true;
+                        result.push(' '); // preserve spacing
+                    } else if chars.peek() == Some(&'*') {
+                        chars.next(); // consume the '*'
+                        in_block_comment = true;
+                        result.push(' '); // preserve spacing
+                    } else {
+                        result.push(c);
+                    }
+                }
+                '"' => {
+                    result.push(c);
+                    in_string = true;
+                }
+                _ => result.push(c),
+            }
+        }
+    }
+
+    result
 }
 
 pub fn parse_issue_status(
