@@ -237,6 +237,9 @@ pub fn run_java_tests(
                     || name.ends_with("Tests.java")
                     || name.ends_with("test.go")
                     || name.ends_with("Test.go")
+                    || name.ends_with("Test.class")
+                    || name.ends_with("Tests.class")
+                    || name.ends_with("test.class")
                 {
                     let dest = students_src.join(name);
                     fs::copy(&path, &dest)?;
@@ -563,13 +566,16 @@ pub async fn send_payload(
 
                         // Combine teacher's feedback with AI feedback
                         format!(
-                            "👨‍🏫 **Teacher's note**:\n\n{}\n\n---\n\n🤖 **AI Suggestions**:\n\n{}",
+                            "👨‍🏫 **Teacher's note**:\n\n{}\n\n---\n\n🤖 **AI Suggestions** (optional improvements, not requirements):\n\n{}",
                             teacher_feedback.trim(),
                             ai_feedback
                         )
                     } else {
-                        // Use only AI feedback but include AI suggestions header
-                        format!("🤖 **AI Suggestions**:\n\n{}", ai_feedback)
+                        // Use only AI feedback but include AI suggestions header with disclaimer
+                        format!(
+                            "🤖 **AI Suggestions** (optional improvements, not requirements):\n\n{}\n\nNote: These suggestions are meant to help you learn and improve - they are not mandatory requirements that must be completed.",
+                            ai_feedback
+                        )
                     };
 
                     send_issue(
