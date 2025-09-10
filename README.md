@@ -1,6 +1,6 @@
-# AI-Grader
+# Assistant Moderated AI-Generated Insights(IMAGI)
 
-AI-Grader is a CLI tool that automates grading of Java assignments for KTH courses DD1337 and DD1338. It streamlines the workflow for TAs by handling repository cloning, test execution, AI-based grading (using OpenAI or Google Gemini), and feedback posting.
+IMAGI is a CLI tool that automates grading of Java assignments for KTH courses DD1337 and DD1338. It streamlines the workflow for TAs by handling repository cloning, test execution, AI-based grading (using OpenAI or Google Gemini), and feedback posting.
 
 ## Table of Contents
 
@@ -91,7 +91,7 @@ The installation script will:
 3. Set up a Python virtual environment
 4. Set up a Python virtual environment in the AI_api directory
 5. Build and install the AI-Grader CLI globally
-6. Configure your PATH to make the `grader` command available
+6. Configure your PATH to make the `imagi` command available
 
 This script has been tested on both Arch Linux and Ubuntu virtual machines to ensure cross-distribution compatibility.
 
@@ -109,8 +109,8 @@ After restarting your terminal:
 2. Run grader commands from anywhere:
    ```sh
    # Examples:
-   grader help
-   grader clone -s students.txt -t task-1 -o ./output
+   imagi help
+   imagi clone -s students.txt -t task-1 -o ./output
    ```
 
 **Note:** On some Debian/Ubuntu systems, you may need to install additional dependencies:
@@ -207,11 +207,11 @@ From the repository directory:
 cargo install --path .
 ```
 
-This will place the `grader` binary in `~/.cargo/bin` (make sure this directory is in your `PATH`).
-After installation, you can run `grader` from any directory:
+This will place the `imagi` binary in `~/.cargo/bin` (make sure this directory is in your `PATH`).
+After installation, you can run `imagi` from any directory:
 
 ```sh
-grader help
+imagi help
 ```
 
 If the command does not work, add this to your `.bashrc`, `.zshrc`, or equivalent:
@@ -224,7 +224,7 @@ Alternatively, you can install it system-wide:
 
 ```sh
 cargo build --release
-sudo cp target/release/grader /usr/local/bin/grader
+sudo cp target/release/imagi /usr/local/bin/imagi
 ```
 
 #### 7. Set Up Environment Variables
@@ -237,7 +237,7 @@ export AI_GRADER_JARS_DIR=/path/to/jars/directory
 ```
 
 **Note:**
-- Your binary will be named `grader` (from `[package] name = "grader"` in Cargo.toml).
+- Your binary will be named `imagi` (from `[package] name = "imagi"` in Cargo.toml).
 - If you want the command to be something else, either rename your package in `Cargo.toml` or copy the binary with a different name.
 
 ## Configuration
@@ -404,7 +404,7 @@ During the grading process, after seeing the AI-generated feedback for each stud
 
 ### Help Output
 
-Run `grader help` to see all commands, options and how each command works.
+Run `imagi help` to see all commands, options and how each command works.
 
 ## API Integration
 
@@ -420,32 +420,32 @@ The server should run at `http://127.0.0.1:8000/grade_gpt` or `http://127.0.0.1:
 
 ```sh
 # Clone student repos for a task
-grader clone -s students.txt -t task-1 -o ./output
+imagi clone -s students.txt -t task-1 -o ./output
 # or with long options:
-grader clone --students students.txt --task task-1 --output ./output
+imagi clone --students students.txt --task task-1 --output ./output
 
 # Clone solution repos for all tasks
-grader tests -o ./solutions
+imagi tests -o ./solutions
 # or with long options:
-grader tests --output ./solutions
+imagi tests --output ./solutions
 
 # Compile and test student Java files, create JSON payloads
-grader java -j ./output/task-1/src_paths.json -o ./output/task-1/compiled -t ./solutions/task-1/src --jars ./jars
+imagi java -j ./output/task-1/src_paths.json -o ./output/task-1/compiled -t ./solutions/task-1/src --jars ./jars
 # or with long options:
-grader java --json ./output/task-1/src_paths.json --output ./output/task-1/compiled --tests ./solutions/task-1/src --jars ./jars
+imagi java --json ./output/task-1/src_paths.json --output ./output/task-1/compiled --tests ./solutions/task-1/src --jars ./jars
 
 # Print test results from JSON files
-grader results -j ./output/task-1/compiled/json_files
+imagi results -j ./output/task-1/compiled/json_files
 # or with long options:
-grader results --json ./output/task-1/compiled/json_files
+imagi results --json ./output/task-1/compiled/json_files
 
 # Grade assignments using the AI API and post feedback to GitHub
 # Using default OpenAI model:
-grader grade -j ./output/task-1/compiled/json_files -o ./feedback
+imagi grade -j ./output/task-1/compiled/json_files -o ./feedback
 # Using Google Gemini model:
-grader grade -j ./output/task-1/compiled/json_files -o ./feedback -m gemini
+imagi grade -j ./output/task-1/compiled/json_files -o ./feedback -m gemini
 # or with long options:
-grader grade --json ./output/task-1/compiled/json_files --output ./feedback --model gemini
+imagi grade --json ./output/task-1/compiled/json_files --output ./feedback --model gemini
 # (On Arch Linux, this requires a virtual environment. On other systems, you can modify github_api.rs to use system Python)
 
 # Interactive prompts during grading:
@@ -458,14 +458,14 @@ grader grade --json ./output/task-1/compiled/json_files --output ./feedback --mo
 # Note: To use the teacher.txt prompt instead, modify the API code files as shown in the Configuration section
 
 # Print AI-generated feedback from JSON files
-grader feedback -j ./feedback
+imagi feedback -j ./feedback
 # or with long options:
-grader feedback --json ./feedback
+imagi feedback --json ./feedback
 
 # Check issue statuses for students in a task
-grader issues -s students.txt -t task-1
+imagi issues -s students.txt -t task-1
 # or with long options:
-grader issues --students students.txt --task task-1
+imagi issues --students students.txt --task task-1
 
 
 ```
