@@ -11,56 +11,48 @@ use crate::github_api::{
 
 #[derive(Parser)]
 #[command(
-    name = "grader",
-    about = "🦀 Rust Grader CLI: Automate grading of student Java assignments.",
-    long_about = "🦀 Rust Grader CLI\n\
+    name = "imagi",
+    about = "🦀 IMAGI: Automate grading of student Java assignments.",
+    long_about = "🦀 IMAGI - Assistant Moderated AI-Generated Insights\n\
     \n\
     Available commands:\n\
       help      - Show this help message.\n\
-      clone     - Clone student repositories into a specified output directory and create a JSON file with src paths.\n\
+      clone     - Clone student repositories and optionally compile/test Java files.\n\
       tests     - Clone all solution repos from inda-master into a specified output directory.\n\
-      java      - Compile and test all student Java files, collect results, and create JSON payloads.\n\
       results   - Print test results from JSON file(s) in a clear terminal format.\n\
       grade     - Send JSON payloads to the Python AI API for grading and post feedback to GitHub.\n\
       feedback  - Print AI-generated feedback from JSON file(s) in a clear terminal format.\n\
       issues    - Check GitHub issues for students and display their status (PASS, FAIL, KOMP, KOMPLETTERING).\n\
     \n\
     USAGE EXAMPLES:\n\
-      grader help\n\
+      imagi help\n\
         Show this help message.\n\
     \n\
-      grader clone -s/--students <path-to-students.txt> -t/--task <task-number> -o/--output <output-dir>\n\
-        Clone all student repos for the specified task into <output-dir>/<task-number> and create src_paths.json.\n\
+      imagi clone -s/--students <path-to-students.txt> -t/--task <task-number> -o/--output <output-dir> -u/--unittest <solutions-src-dir>\n\
+        Clone all student repos for the specified task into <output-dir>/<task-number>, creates src_paths.json and compiles/tests Java files.\n\
+        The unittest parameter specifies the directory containing test files for compilation and testing.\n\
         Example:\n\
-          grader clone -s /home/inda-25-students.txt -t task-5 -o /home/inda-25/task-5\n\
+          imagi clone -s /home/inda-25-students.txt -t task-5 -o /home/inda-25 -u /home/inda-master/task-5/src\n\
         Example students.txt file:\n\
           alice\n\
           bob\n\
           charlie\n\
           # Each line should contain a student kth_ID.\n\
     \n\
-      grader tests -o/--output <output-dir>\n\
+      imagi tests -o/--output <output-dir>\n\
         Clone all solution repos from inda-master for all tasks into <output-dir>.\n\
     \n\
-      grader java -j/--json <src_paths.json> -o/--output <output-dir> -t/--tests <solutions-src-dir>\n\
-        Compile and test all student Java files, collect results, and create JSON payloads for each student.\n\
-        When compiling and running tests, any student-written test files (e.g., *Test.java) are moved to a student_tests/ directory to avoid conflicts with the provided tests.\n\
-        Example:\n\
-          grader java -j /home/inda-25/task-5/src_paths.json \\\n\
-                      -o /home/inda-25/task-5/compiled \\\n\
-                      -t /home/inda-master/task-5/src \\\n\
-    \n\
-      grader results -j/--json <path-to-json-or-dir>\n\
+      imagi results -j/--json <path-to-json-or-dir>\n\
         Print test results from a JSON file or directory in a readable format.\n\
     \n\
-      grader grade -j/--json <json-dir> -o/--output <output-dir> [-m/--model <openai|gemini>]\n\
+      imagi grade -j/--json <json-dir> -o/--output <output-dir> [-m/--model <openai|gemini>]\n\
         Send JSON payloads to the Python AI API for grading and post feedback to GitHub.\n\
         Default model is 'openai'. If using 'gemini', a Python virtual environment must be set up.\n\
     \n\
-      grader feedback -j/--json <path-to-feedback-json-or-dir>\n\
+      imagi feedback -j/--json <path-to-feedback-json-or-dir>\n\
         Print AI-generated feedback from a JSON file or directory in a readable format.\n\
     \n\
-      grader issues -s/--students <path-to-students.txt> -t/--task <task>\n\
+      imagi issues -s/--students <path-to-students.txt> -t/--task <task>\n\
         Check GitHub issues for all students in a task and display their status (PASS, FAIL, KOMP, KOMPLETTERING).\n\
         Shows a formatted table with student names and their issue status with corresponding emojis.\n\
     \n\
@@ -84,18 +76,12 @@ enum Commands {
         task: String,
         #[arg(short = 'o', long)]
         output: PathBuf,
+        #[arg(short = 'u', long = "unittest", required = true)]
+        tests: PathBuf,
     },
     Tests {
         #[arg(short = 'o', long)]
         output: PathBuf,
-    },
-    Java {
-        #[arg(short = 'j', long)]
-        json: PathBuf,
-        #[arg(short = 'o', long)]
-        output: PathBuf,
-        #[arg(short = 't', long)]
-        tests: PathBuf,
     },
     Results {
         #[arg(short = 'j', long)]
@@ -134,29 +120,42 @@ async fn main() {
             students,
             task,
             output,
+            tests,
         } => {
+            // Clone repositories
             if let Err(e) = clone_repos(
                 students.to_path_buf(),
                 task.to_string(),
                 output.to_path_buf(),
             ) {
                 eprintln!("Error while cloning the repos or creating the json: {}", e);
+                return;
             }
-        }
-        Commands::Java {
-            json,
-            output,
-            tests,
-        } => {
+
+            // Compile and test Java files after cloning
+            // Construct the path to the generated src_paths.json
+            let repos_dir = output.join(&task);
+            let json_path = repos_dir.join("src_paths.json");
+            let compiled_output = repos_dir.join("compiled");
+
+            // Create the output directory if it doesn't exist
+            if let Err(e) = std::fs::create_dir_all(&compiled_output) {
+                eprintln!("Error creating output directory: {}", e);
+                return;
+            }
+
+            // Compile and test Java files
             if let Err(e) = create_payload(
-                json.to_path_buf(),
-                output.to_path_buf(),
+                json_path,
+                compiled_output,
                 tests.to_path_buf(),
             ) {
                 eprintln!(
-                    "Error while compiling or running the java tests or parsing the students' results: {}",
+                    "Error while compiling or running the java tests: {}",
                     e
                 );
+            } else {
+                println!("Successfully cloned repositories and compiled/tested Java files!");
             }
         }
         Commands::Results { json } => {

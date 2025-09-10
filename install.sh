@@ -2,8 +2,8 @@
 
 set -e  # Exit on error
 
-echo "AI-Grader Installation Script"
-echo "============================="
+echo "IMAGI Installation Script"
+echo "========================="
 
 # Detect OS and package manager
 detect_environment() {
@@ -248,7 +248,7 @@ configure_environment
 echo
 echo "Installation complete!"
 echo
-echo "To use AI-Grader:"
+echo "To use IMAGI:"
 echo "1. Start a new terminal session or source your profile:"
 echo "   source ~/.bashrc  # or ~/.zshrc depending on your shell"
 echo
@@ -257,8 +257,8 @@ echo "   export GITHUB_TOKEN=your_github_token"
 echo "   export GRADER_OPENAI_API_KEY=your_openai_api_key"
 echo "   # or export GRADER_GEMINI_API_KEY=your_gemini_api_key"
 echo
-echo "3. Run grader commands from anywhere:"
-echo "   grader help"
-echo "   grader clone -s students.txt -t task-1 -o ./output"
+echo "3. Run imagi commands from anywhere:"
+echo "   imagi help"
+echo "   imagi clone -s students.txt -t task-1 -o ./output"
 echo
-echo "Thank you for installing AI-Grader!"
+echo "Thank you for installing IMAGI!"
