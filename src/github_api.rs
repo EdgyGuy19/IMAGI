@@ -204,7 +204,7 @@ pub fn run_java_tests(
 ) -> Result<String, Box<dyn std::error::Error>> {
     // 1. Move any pre-existing student test files to student_tests/
     let mut test_files_to_move = Vec::new();
-    let jars_dir = env::var("AI_GRADER_JARS_DIR").expect("Set the JARS_DIR environment variable");
+    let jars_dir = env::var("IMAGI_JARS_DIR").expect("Set the IMAGI_JARS_DIR environment variable");
 
     for entry in fs::read_dir(students_src)? {
         let entry = entry?;
@@ -399,20 +399,20 @@ pub async fn send_payload(
     // Define API endpoint and server command based on model choice
     let model_str = model.unwrap_or("openai");
     let api_endpoint = match model_str {
-        "gemini" => "http://127.0.0.1:8000/grade_gemini",
-        _ => "http://127.0.0.1:8000/grade_gpt", // Default to OpenAI
+        "gemini" => "http://127.0.0.1:8000/imagi_gemini",
+        _ => "http://127.0.0.1:8000/imagi_gpt", // Default to OpenAI
     };
 
     // Get project root from environment variable
     let project_root = PathBuf::from(
-        env::var("AI_GRADER_ROOT")
-            .map_err(|_| "AI_GRADER_ROOT environment variable not set. Please set it to the path containing the AI_api directory.")?
+        env::var("IMAGI_ROOT")
+            .map_err(|_| "IMAGI_ROOT environment variable not set. Please set it to the path containing the AI_api directory.")?
     );
 
     // Verify AI_api directory exists
     if !project_root.join("AI_api").exists() {
         return Err(format!(
-            "AI_api directory not found in: {}. Please check your AI_GRADER_ROOT setting.",
+            "AI_api directory not found in: {}. Please check your IMAGI_ROOT setting.",
             project_root.display()
         )
         .into());
@@ -471,7 +471,7 @@ pub async fn send_payload(
         if path.is_file() {
             let content = fs::read_to_string(path)?; //basic post request
             let post = api
-                .post(api_endpoint) // Use model-specific endpoint (either /grade_gpt or /grade_gemini)
+                .post(api_endpoint) // Use model-specific endpoint (either /imagi_gpt or /imagi_gemini)
                 .header("Content-Type", "application/json")
                 .body(content)
                 .send()

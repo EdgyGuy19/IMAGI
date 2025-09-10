@@ -187,19 +187,19 @@ configure_environment() {
         echo "Adding environment variables to $SHELL_PROFILE"
 
         # Check if variables already exist in profile
-        if ! grep -q "AI_GRADER_ROOT" "$SHELL_PROFILE"; then
-            echo "export AI_GRADER_ROOT=\"$PROJECT_ROOT\"" >> "$SHELL_PROFILE"
-            echo "✅ Added AI_GRADER_ROOT to $SHELL_PROFILE"
+        if ! grep -q "IMAGI_ROOT" "$SHELL_PROFILE"; then
+            echo "export IMAGI_ROOT=\"$PROJECT_ROOT\"" >> "$SHELL_PROFILE"
+            echo "✅ Added IMAGI_ROOT to $SHELL_PROFILE"
         fi
 
-        if ! grep -q "AI_GRADER_JARS_DIR" "$SHELL_PROFILE"; then
-            echo "export AI_GRADER_JARS_DIR=\"$JARS_DIR\"" >> "$SHELL_PROFILE"
-            echo "✅ Added AI_GRADER_JARS_DIR to $SHELL_PROFILE"
+        if ! grep -q "IMAGI_JARS_DIR" "$SHELL_PROFILE"; then
+            echo "export IMAGI_JARS_DIR=\"$JARS_DIR\"" >> "$SHELL_PROFILE"
+            echo "✅ Added IMAGI_JARS_DIR to $SHELL_PROFILE"
         fi
     else
         echo "⚠️ Could not find shell profile file. Please add the following to your shell profile:"
-        echo "export AI_GRADER_ROOT=\"$PROJECT_ROOT\""
-        echo "export AI_GRADER_JARS_DIR=\"$JARS_DIR\""
+        echo "export IMAGI_ROOT=\"$PROJECT_ROOT\""
+        echo "export IMAGI_JARS_DIR=\"$JARS_DIR\""
     fi
 }
 
@@ -254,8 +254,8 @@ echo "   source ~/.bashrc  # or ~/.zshrc depending on your shell"
 echo
 echo "2. Set your API keys:"
 echo "   export GITHUB_TOKEN=your_github_token"
-echo "   export GRADER_OPENAI_API_KEY=your_openai_api_key"
-echo "   # or export GRADER_GEMINI_API_KEY=your_gemini_api_key"
+echo "   export IMAGI_OPENAI_API_KEY=your_openai_api_key"
+echo "   # or export IMAGI_GEMINI_API_KEY=your_gemini_api_key"
 echo
 echo "3. Run imagi commands from anywhere:"
 echo "   imagi help"
