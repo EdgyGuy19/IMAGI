@@ -113,7 +113,7 @@ After restarting your terminal:
    ```sh
    # Examples:
    imagi help
-   imagi clone -s students.txt -t task-1 -o ./output
+   imagi clone -s students.txt -t task-1 -o ./output -u ./unitTest/src
    ```
 
 **Note:** On some Debian/Ubuntu systems, you may need to install additional dependencies:
