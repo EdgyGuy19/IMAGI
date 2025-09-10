@@ -247,9 +247,12 @@ export AI_GRADER_JARS_DIR=/path/to/jars/directory
 AI-Grader uses two prompt template files in the `AI_api` directory to generate feedback:
 
 - `student.txt`: Controls the format and content of student-facing feedback posted to GitHub issues
-- `teacher.txt`: Used internally for more detailed pedagogical analysis (not shown to students)
+- `teacher.txt`: Used internally for more detailed pedagogical analysis for teaching assistants (not shown to students)
 
-**IMPORTANT: Do not change the structure or output format of the prompts.** You may adjust the content, tone, or guidance, but the output format with "Improvements:" and checkboxes must be preserved for proper functioning.
+**IMPORTANT:**
+- Do not change the structure or output format of the prompts.
+- Teacher prompt feedback is intended for TA reference only and should never be posted as GitHub issues for students. It provides comprehensive analysis of all issues in the student's code, which may overwhelm or discourage students if posted directly.
+- Always use the student prompt output when creating GitHub issues for students.
 
 By default, the system uses the `student.txt` prompt for generating feedback. This can be seen in both the API code files:
 
@@ -377,6 +380,8 @@ The AI-Grader uses two different prompt templates located in the `AI_api` direct
 - `teacher.txt` - Template used for more detailed pedagogical analysis (available to teachers only, not shown to students)
 
 For information on customizing these templates, see the [Prompt Templates Customization](#prompt-templates-customization) section.
+
+**IMPORTANT NOTE:** Only use the student prompt feedback when posting GitHub issues. Teacher prompt feedback is intended for TAs and contains a comprehensive list of all issues that may overwhelm students if posted directly.
 
 ### Example of Posted GitHub Issues
 

@@ -37,14 +37,15 @@ Mandatory Formatting and Constraints:
     Improvements:
     - [ ] <highest priority improvement with specific line/method reference>
     - [ ] <second priority improvement with specific line/method reference>
-    - [ ] <third priority improvement with specific line/method reference>
+    - [ ] <additional improvements with specific line/method references>
+    (Continue listing ALL issues in order of priority - do not limit to only 3 improvements)
 
     Teaching Notes:
     * <conceptual understanding to reinforce>
     * <suggested approach for guiding the student>
     * <potential misconception to address>
 
-2.  The feedback must be precise and actionable (no more than 150 words total). Prioritize improvements by pedagogical importance, not just code correctness.
+2.  The feedback must be precise and actionable. List ALL issues in priority order, while keeping the entire feedback concise. Prioritize improvements by pedagogical importance, not just code correctness.
 3.  The tone must be professional and collegial, addressing the teacher as a fellow educator.
 4.  Provide insight into the underlying issues without giving complete solutions that teachers could simply pass on.
 5.  Be consistent in your analysis depth and teaching approach regardless of which AI model is processing this request.
