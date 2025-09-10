@@ -551,7 +551,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "image"
+name = "imagi"
 version = "0.1.0"
 dependencies = [
  "clap",

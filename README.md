@@ -367,9 +367,8 @@ charlie
 
 ### CLI Commands
 
-- `clone`     - Clone student repositories and create a JSON file with src paths.
+- `clone`     - Clone student repositories and compile/test Java files.
 - `tests`     - Clone all solution repos from inda-master into a specified output directory.
-- `java`      - Compile and test all student Java files, collect results, and create JSON payloads.
 - `results`   - Print test results from JSON file(s) in a clear terminal format.
 - `grade`     - Send JSON payloads to the Python AI API for grading and post feedback to GitHub. Supports both OpenAI and Google Gemini models.
 - `feedback`  - Print AI-generated feedback from JSON file(s) in a clear terminal format.
@@ -419,20 +418,15 @@ The server should run at `http://127.0.0.1:8000/grade_gpt` or `http://127.0.0.1:
 ## Examples
 
 ```sh
-# Clone student repos for a task
-imagi clone -s students.txt -t task-1 -o ./output
+# Clone student repos and compile/test Java files
+imagi clone -s students.txt -t task-1 -o ./output -u ./solutions/task-1/src
 # or with long options:
-imagi clone --students students.txt --task task-1 --output ./output
+imagi clone --students students.txt --task task-1 --output ./output --unittest ./solutions/task-1/src
 
 # Clone solution repos for all tasks
 imagi tests -o ./solutions
 # or with long options:
 imagi tests --output ./solutions
-
-# Compile and test student Java files, create JSON payloads
-imagi java -j ./output/task-1/src_paths.json -o ./output/task-1/compiled -t ./solutions/task-1/src --jars ./jars
-# or with long options:
-imagi java --json ./output/task-1/src_paths.json --output ./output/task-1/compiled --tests ./solutions/task-1/src --jars ./jars
 
 # Print test results from JSON files
 imagi results -j ./output/task-1/compiled/json_files
