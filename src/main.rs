@@ -20,7 +20,7 @@ use crate::github_api::{
       clone     - Clone student repositories and optionally compile/test Java files.\n\
       tests     - Clone all solution repos from inda-master into a specified output directory.\n\
       results   - Print test results from JSON file(s) in a clear terminal format.\n\
-      grade     - Send JSON payloads to the Python AI API for grading and post feedback to GitHub.\n\
+      generate - Send JSON payloads to the Python AI API for grading and post feedback to GitHub.\n\
       feedback  - Print AI-generated feedback from JSON file(s) in a clear terminal format.\n\
       issues    - Check GitHub issues for students and display their status (PASS, FAIL, KOMP, KOMPLETTERING).\n\
     \n\
@@ -45,7 +45,7 @@ use crate::github_api::{
       imagi results -j/--json <path-to-json-or-dir>\n\
         Print test results from a JSON file or directory in a readable format.\n\
     \n\
-      imagi grade -j/--json <json-dir> -o/--output <output-dir> [-m/--model <openai|gemini>]\n\
+      imagi generate -j/--json <json-dir> -o/--output <output-dir> [-m/--model <openai|gemini>]\n\
         Send JSON payloads to the Python AI API for grading and post feedback to GitHub.\n\
         Default model is 'openai'. If using 'gemini', a Python virtual environment must be set up.\n\
     \n\
@@ -59,7 +59,7 @@ use crate::github_api::{
     Notes:\n\
       - All commands that clone or generate files require an explicit --output directory.\n\
       - Output directories will be created automatically if they do not exist.\n\
-      - The 'grade' command integrates with the Python AI API and posts feedback to GitHub issues.\n\
+      - The 'generate' command integrates with the Python AI API and posts feedback to GitHub issues.\n\
       "
 )]
 struct Cli {
@@ -87,7 +87,7 @@ enum Commands {
         #[arg(short = 'j', long)]
         json: PathBuf,
     },
-    Grade {
+    Generate {
         #[arg(short = 'j', long)]
         json: PathBuf,
         #[arg(short = 'o', long)]
@@ -166,7 +166,7 @@ async fn main() {
                 );
             }
         }
-        Commands::Grade {
+        Commands::Generate {
             json,
             output,
             model,

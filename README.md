@@ -35,13 +35,13 @@ IMAGI is a CLI tool that automates grading of Java assignments for KTH courses D
 
 - Clone student repositories and solution repositories from GitHub
 - Compile and test student Java assignments using JUnit/Hamcrest
-- Grade assignments using OpenAI or Google Gemini via a Python FastAPI service
+- Give feedback to assignments using OpenAI or Google Gemini via a Python FastAPI service
 - Post feedback to GitHub issues automatically
 - Print test results and AI-generated feedback in the terminal
 
 ## Installation
 
-There are two methods to install AI-Grader:
+There are two methods to install IMAGI:
 1. **Automated Installation** (recommended): A single script that detects your OS, installs dependencies, and configures everything
 2. **Manual Installation**: Step-by-step instructions if you need more control over the installation process
 
@@ -74,12 +74,15 @@ Before running the automated installation script, please ensure you have:
    - `src/github_api.rs`, line ~612: `let org = "inda-25";`
    - `src/github_api.rs`, line ~682: `let org = "inda-25";`
 
-The easiest way to install AI-Grader is to use our installation script:
+The easiest way to install IMAGI is to use our installation script:
 
 ```sh
 # Clone the repository (if you haven't already)
-git clone https://github.com/EdgyGuy19/AI-Grader.git
-cd AI-Grader
+git clone https://github.com/EdgyGuy19/IMAGI.git
+cd IMAGI
+
+# Make sure the script is executable (if needed)
+chmod +x install.sh
 
 # Run the installation script
 ./install.sh
@@ -90,7 +93,7 @@ The installation script will:
 2. Install all necessary dependencies (Python, Rust, Java, Git, etc.)
 3. Set up a Python virtual environment
 4. Set up a Python virtual environment in the AI_api directory
-5. Build and install the AI-Grader CLI globally
+5. Build and install the IMAGI CLI globally
 6. Configure your PATH to make the `imagi` command available
 
 This script has been tested on both Arch Linux and Ubuntu virtual machines to ensure cross-distribution compatibility.
@@ -101,12 +104,12 @@ After restarting your terminal:
 1. Set up your API keys and Github Token if you haven't already:
    ```sh
    export GITHUB_TOKEN=your_github_token
-   export GRADER_OPENAI_API_KEY=your_openai_api_key
+   export IMAGI_OPENAI_API_KEY=your_openai_api_key
    # Or if using Gemini:
-   # export GRADER_GEMINI_API_KEY=your_gemini_api_key
+   # export IMAGI_GEMINI_API_KEY=your_gemini_api_key
    ```
 
-2. Run grader commands from anywhere:
+2. Run IMAGI commands from anywhere:
    ```sh
    # Examples:
    imagi help
@@ -120,7 +123,7 @@ sudo apt-get install pkg-config libssl-dev
 
 ### Manual Installation
 
-If you prefer to install AI-Grader manually or need more control over the installation process, follow these detailed steps:
+If you prefer to install IMAGI manually or need more control over the installation process, follow these detailed steps:
 
 #### 1. Set up Git SSH Authentication
 
@@ -192,8 +195,8 @@ cd ..
 
 ```sh
 # Clone the repository
-git clone https://github.com/EdgyGuy19/AI-Grader.git
-cd AI-Grader
+git clone https://github.com/EdgyGuy19/IMAGI.git
+cd IMAGI
 
 # Build the CLI tool
 cargo build --release
@@ -232,8 +235,8 @@ sudo cp target/release/imagi /usr/local/bin/imagi
 Create the following environment variables (add to your `.bashrc`, `.zshrc`, or equivalent):
 
 ```sh
-export AI_GRADER_ROOT=/path/to/AI-Grader/project/directory
-export AI_GRADER_JARS_DIR=/path/to/jars/directory
+export IMAGI_ROOT=/path/to/IMAGI/project/directory
+export IMAGI_JARS_DIR=/path/to/jars/directory
 ```
 
 **Note:**
@@ -244,7 +247,7 @@ export AI_GRADER_JARS_DIR=/path/to/jars/directory
 
 ### Prompt Templates Customization
 
-AI-Grader uses two prompt template files in the `AI_api` directory to generate feedback:
+IMAGI uses two prompt template files in the `AI_api` directory to generate feedback:
 
 - `student.txt`: Controls the format and content of student-facing feedback posted to GitHub issues
 - `teacher.txt`: Used internally for more detailed pedagogical analysis for teaching assistants (not shown to students)
@@ -264,7 +267,7 @@ By default, the system uses the `student.txt` prompt for generating feedback. Th
 
 To customize these templates:
 
-1. Navigate to the `AI_api` directory in your AI-Grader installation
+1. Navigate to the `AI_api` directory in your IMAGI installation
 2. Edit the appropriate file with a text editor:
    ```sh
    # To customize student feedback format
@@ -296,12 +299,12 @@ To customize these templates:
 
 ### Environment Variables
 
-AI-Grader requires the following environment variables:
+IMAGI requires the following environment variables:
 
-- `AI_GRADER_ROOT`: Path to the directory containing the AI-Grader project (with the `AI_api` folder)
-- `AI_GRADER_JARS_DIR`: Path to the directory containing JUnit and Hamcrest JAR files
+- `IMAGI_ROOT`: Path to the directory containing the IMAGI project (with the `AI_api` folder)
+- `IMAGI_JARS_DIR`: Path to the directory containing JUnit and Hamcrest JAR files
 - `GITHUB_TOKEN`: Your GitHub personal access token for repository access and issue creation
-- `GRADER_OPENAI_API_KEY` or `GRADER_GEMINI_API_KEY`: API key for your chosen AI service
+- `IMAGI_OPENAI_API_KEY` or `IMAGI_GEMINI_API_KEY`: API key for your chosen AI service
 
 For help setting up environment variables: [How to set environment variables](https://www.twilio.com/en-us/blog/how-to-set-environment-variables-html)
 
@@ -311,9 +314,9 @@ Before running any grading commands, set up these API keys and tokens:
 
 ```sh
 export GITHUB_TOKEN=your_github_token
-export GRADER_OPENAI_API_KEY=your_openai_api_key
+export IMAGI_OPENAI_API_KEY=your_openai_api_key
 # If using Gemini model:
-export GRADER_GEMINI_API_KEY=your_gemini_api_key
+export IMAGI_GEMINI_API_KEY=your_gemini_api_key
 ```
 
 **Important:**
@@ -370,11 +373,11 @@ charlie
 - `clone`     - Clone student repositories and compile/test Java files.
 - `tests`     - Clone all solution repos from inda-master into a specified output directory.
 - `results`   - Print test results from JSON file(s) in a clear terminal format.
-- `grade`     - Send JSON payloads to the Python AI API for grading and post feedback to GitHub. Supports both OpenAI and Google Gemini models.
+- `generate`  - Send JSON payloads to the Python AI API for grading and post feedback to GitHub. Supports both OpenAI and Google Gemini models.
 - `feedback`  - Print AI-generated feedback from JSON file(s) in a clear terminal format.
 - `issues`    - Check GitHub issues for students' repositories and display their status (PASS, FAIL, KOMP, KOMPLETTERING).
 
-The AI-Grader uses two different prompt templates located in the `AI_api` directory:
+IMAGI uses two different prompt templates located in the `AI_api` directory:
 - `student.txt` - Template used to generate student-facing feedback (concise, actionable improvements with checkboxes)
 - `teacher.txt` - Template used for more detailed pedagogical analysis (available to teachers only, not shown to students)
 
@@ -384,7 +387,7 @@ For information on customizing these templates, see the [Prompt Templates Custom
 
 ### Example of Posted GitHub Issues
 
-When you run the `grade` command, AI-Grader creates GitHub issues with feedback for students. Here are actual examples of how these issues appear:
+When you run the `generate` command, IMAGI creates GitHub issues with feedback for students. Here are actual examples of how these issues appear:
 
 #### Standard Issue (Without Teacher's Note)
 
@@ -396,7 +399,7 @@ When you run the `grade` command, AI-Grader creates GitHub issues with feedback 
 
 The checkboxes allow students to track their progress as they address each improvement point. The "AI Suggestions" section is always included, while the "Teacher's note" section appears only when you choose to add your own feedback. **Important:** These suggestions are NOT a mandatory to-do list - they're optional improvements that students can consider to enhance their understanding and code quality.
 
-During the grading process, after seeing the AI-generated feedback for each student, you'll be prompted:
+During the feedback generation process, after seeing the AI-generated feedback for each student, you'll be prompted:
 1. Whether to create a GitHub issue or just save the feedback locally
 2. If creating an issue, whether to add your own teacher notes
 3. If adding notes, you can type multi-line feedback (ending with 'DONE')
@@ -411,9 +414,9 @@ The Rust CLI interacts with a Python FastAPI service for grading.
 
 ### Start the API Server
 
-The server starts up automatically with the grade command and shuts down after the last student has been graded.
+The server starts up automatically with the generate command and shuts down after the last student has been processed.
 
-The server should run at `http://127.0.0.1:8000/grade_gpt` or `http://127.0.0.1:8000/grade_gemini` depending on which model you choose.
+The server should run at `http://127.0.0.1:8000/imagi_gpt` or `http://127.0.0.1:8000/imagi_gemini` depending on which model you choose.
 
 ## Examples
 
@@ -433,16 +436,16 @@ imagi results -j ./output/task-1/compiled/json_files
 # or with long options:
 imagi results --json ./output/task-1/compiled/json_files
 
-# Grade assignments using the AI API and post feedback to GitHub
+# Generate feedback for assignments using the AI API and post feedback to GitHub
 # Using default OpenAI model:
-imagi grade -j ./output/task-1/compiled/json_files -o ./feedback
+imagi generate -j ./output/task-1/compiled/json_files -o ./feedback
 # Using Google Gemini model:
-imagi grade -j ./output/task-1/compiled/json_files -o ./feedback -m gemini
+imagi generate -j ./output/task-1/compiled/json_files -o ./feedback -m gemini
 # or with long options:
-imagi grade --json ./output/task-1/compiled/json_files --output ./feedback --model gemini
+imagi generate --json ./output/task-1/compiled/json_files --output ./feedback --model gemini
 # (On Arch Linux, this requires a virtual environment. On other systems, you can modify github_api.rs to use system Python)
 
-# Interactive prompts during grading:
+# Interactive prompts during feedback generation:
 # For each student, you'll see:
 #   1. Generated AI feedback (using student.txt prompt by default)
 #   2. Prompt: "Would you like to create a GitHub issue for this student? [y/n]"
@@ -469,7 +472,7 @@ When compiling and running tests, any student-written test files (e.g., `*Test.j
 ## Directory Structure
 
 ```
-AI-Grader/
+IMAGI/
 ├── src/                 # Rust source code
 │   ├── main.rs          # Main entry point for the CLI application
 │   ├── github_api.rs    # GitHub integration and Python API interaction
@@ -491,9 +494,10 @@ AI-Grader/
 
 #### Environment and Setup Issues
 - **Command not found:** Ensure you installed the CLI globally and `~/.cargo/bin` is in your `PATH`
-- **Missing environment variables:** Verify you've set `AI_GRADER_ROOT`, `GITHUB_TOKEN`, `AI_GRADER_JARS_DIR`, and either `GRADER_OPENAI_API_KEY` or `GRADER_GEMINI_API_KEY`
+- **Missing environment variables:** Verify you've set `IMAGI_ROOT`, `GITHUB_TOKEN`, `IMAGI_JARS_DIR`, and either `IMAGI_OPENAI_API_KEY` or `IMAGI_GEMINI_API_KEY`
 - **After installation:** Remember to restart your terminal to ensure PATH changes take effect
 - **Re-installing:** To reinstall or update dependencies, run `./install.sh` again
+- **Installation script not executable:** If you get a "Permission denied" error, run `chmod +x install.sh` to make it executable
 - **WSL considerations:** When using WSL, ensure SSH keys are properly set up and added to the SSH agent in the Linux environment
 
 
@@ -513,7 +517,7 @@ If problems persist after trying these solutions, please:
 
 ## Contributing
 
-Contributions to AI-Grader are welcome! Here's how you can help:
+Contributions to IMAGI are welcome! Here's how you can help:
 
 - Report bugs or suggest features by opening GitHub issues
 - Submit pull requests with improvements or bug fixes

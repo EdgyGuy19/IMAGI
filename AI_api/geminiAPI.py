@@ -17,9 +17,9 @@ class ReceivedPayload(BaseModel):
     test_results: str
 
 # --- API Key ---
-api_key = os.getenv("GRADER_GEMINI_API_KEY")
+api_key = os.getenv("IMAGI_GEMINI_API_KEY")
 if not api_key:
-    raise RuntimeError("Missing GRADER_GEMINI_API_KEY")
+    raise RuntimeError("Missing IMAGI_GEMINI_API_KEY")
 
 # --- FastAPI app ---
 app = FastAPI()
@@ -33,8 +33,8 @@ async def generic_exception_handler(request: Request, exc: Exception):
     )
 
 # --- Main grading endpoint ---
-@app.post("/grade_gemini")
-async def grade(request: ReceivedPayload):
+@app.post("/imagi_gemini")
+async def imagi(request: ReceivedPayload):
     try:
         client = genai.Client(api_key=api_key)
 

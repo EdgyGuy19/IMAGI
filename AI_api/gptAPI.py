@@ -17,9 +17,9 @@ class ReceivedPayload(BaseModel):
     test_results: str
 
 #Setting up api key(environment variable)
-api_key = os.getenv("GRADER_OPENAI_API_KEY")
+api_key = os.getenv("IMAGI_OPENAI_API_KEY")
 if not api_key:
-    raise RuntimeError("Missing GRADER_OPENAI_API_KEY")
+    raise RuntimeError("Missing IMAGI_OPENAI_API_KEY")
 
 app = FastAPI()
 
@@ -34,8 +34,8 @@ async def generic_exception_handler(request: Request, exc: Exception):
 #Main script for receiving requests, grading and sending back
 #
 #CHOOSE WHICH PROMPT YOU PREFER ON LINE 48!!!
-@app.post("/grade_gpt")
-async def grade(request: ReceivedPayload):
+@app.post("/imagi_gpt")
+async def imagi(request: ReceivedPayload):
     try:
         openai.api_key = api_key
 
