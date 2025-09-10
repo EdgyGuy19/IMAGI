@@ -245,17 +245,20 @@ export IMAGI_JARS_DIR=/path/to/jars/directory
 
 ## Configuration
 
-### Prompt Templates Customization
+### Prompt Templates
 
 IMAGI uses two prompt template files in the `AI_api` directory to generate feedback:
 
 - `student.txt`: Controls the format and content of student-facing feedback posted to GitHub issues
 - `teacher.txt`: Used internally for more detailed pedagogical analysis for teaching assistants (not shown to students)
 
-**IMPORTANT:**
-- Do not change the structure or output format of the prompts.
-- Teacher prompt feedback is intended for TA reference only and should never be posted as GitHub issues for students. It provides comprehensive analysis of all issues in the student's code, which may overwhelm or discourage students if posted directly.
-- Always use the student prompt output when creating GitHub issues for students.
+**IMPORTANT: DO NOT MODIFY THESE PROMPT TEMPLATES**
+
+The prompt templates are carefully designed and optimized for their specific purposes. Modifying them could:
+- Break the expected output format
+- Compromise the quality of feedback
+- Cause formatting issues in GitHub issues
+- Result in inconsistent grading
 
 By default, the system uses the `student.txt` prompt for generating feedback. This can be seen in both the API code files:
 
@@ -265,36 +268,18 @@ By default, the system uses the `student.txt` prompt for generating feedback. Th
 **File: `AI_api/geminiAPI.py` (Google Gemini implementation)**
 ![Google Gemini API code showing student.txt prompt selection](pics/gemini_prompt.png)
 
-To customize these templates:
+To switch between student and teacher prompts (without modifying their content):
 
-1. Navigate to the `AI_api` directory in your IMAGI installation
-2. Edit the appropriate file with a text editor:
-   ```sh
-   # To customize student feedback format
-   nano AI_api/student.txt
-
-   # To customize teacher analysis format
-   nano AI_api/teacher.txt
-   ```
-3. When editing, follow these strict guidelines:
-   - Preserve the `{}` placeholders (they insert task descriptions, code, and test results)
-   - DO NOT change the output format structure (especially the "Improvements:" section with checkboxes)
-   - You may adjust tone, wording, or guidance details, but not the structural format
-   - Test your changes with a small batch of submissions first
-
-4. To switch between student and teacher prompts:
-   - Edit the API code files in the `AI_api` directory:
-     - In `gptAPI.py` (OpenAI implementation): Locate the line `with open("AI_api/student.txt") as f:`
-     - In `geminiAPI.py` (Google Gemini implementation): Locate the line `with open("AI_api/student.txt") as f:`
-   - Change `"AI_api/student.txt"` to `"AI_api/teacher.txt"` in both files to use the teacher prompt instead
-   - Save the files and restart the grading process for changes to take effect
+1. Edit the API code files in the `AI_api` directory:
+   - In `gptAPI.py` (OpenAI implementation): Locate the line `with open("AI_api/student.txt") as f:`
+   - In `geminiAPI.py` (Google Gemini implementation): Locate the line `with open("AI_api/student.txt") as f:`
+2. Change `"AI_api/student.txt"` to `"AI_api/teacher.txt"` in both files to use the teacher prompt instead
+3. Save the files and restart the generating process for changes to take effect
 
 **Important Notes:**
-- You're responsible for maintaining the quality and educational value of custom prompts
-- DO NOT change the structural format or output structure of either prompt
-- Using the teacher prompt will provide more detailed pedagogical analysis
-- The teacher prompt output may not format correctly for GitHub issues as it's designed for teacher consumption
-- After changing prompts, test with a small sample before using in production
+- Teacher prompt feedback is intended for TA reference only and should never be posted as GitHub issues for students. It provides comprehensive analysis of all issues in the student's code, which may overwhelm or discourage students if posted directly.
+- Always use the student prompt output when creating GitHub issues for students.
+- The teacher prompt output may not format correctly for GitHub issues as it's designed for teacher consumption, not for students.
 - Note that comments in student code are automatically removed before processing
 
 ### Environment Variables
