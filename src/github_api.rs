@@ -15,7 +15,7 @@ use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::fs::File;
-use std::io::BufRead;
+use std::io::{BufRead, Write};
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
@@ -156,24 +156,74 @@ pub fn create_payload(
     }
     let dir_path = path_to_task_dir;
     std::fs::create_dir_all(&dir_path)?;
+
+    let total_students = map.len();
+    let mut processed = 0;
+
     for (key, value) in &map {
+        processed += 1;
+        print!(
+            "Processing student {} ({}/{})... ",
+            key, processed, total_students
+        );
+        std::io::stdout().flush().unwrap();
+
         let mut source_files: Vec<SourceFile> = Vec::new();
         let (paths, names) = transform_contents(value)?;
-        let test_results = run_java_tests(value.as_path(), &tests_dir)?;
-        for (name, path) in names.iter().zip(paths.iter()) {
-            let source_file = parse_source_file(name, path)?;
-            source_files.push(source_file);
+
+        match run_java_tests(value.as_path(), &tests_dir) {
+            Ok(test_results) => {
+                if test_results.starts_with("COMPILATION FAILED:") {
+                    println!("❌ COMPILATION FAILED");
+                } else if test_results.starts_with("NO TEST CLASSES FOUND:") {
+                    println!("⚠️ NO TEST CLASSES FOUND");
+                } else if test_results.starts_with("TEST EXECUTION FAILED:") {
+                    println!("❌ TEST EXECUTION FAILED");
+                } else if test_results.contains("FAILURES!!!")
+                    || test_results.contains("Failures: ") && !test_results.contains("Failures: 0")
+                {
+                    println!("❌ TESTS FAILED");
+                } else if test_results.contains("Tests run:") || test_results.contains("OK (") {
+                    println!("✅ TESTS PASSED");
+                } else {
+                    println!("⚠️ TESTS COMPLETED (unclear status)");
+                }
+
+                for (name, path) in names.iter().zip(paths.iter()) {
+                    let source_file = parse_source_file(name, path)?;
+                    source_files.push(source_file);
+                }
+                let payload = create_payload_json(
+                    key.to_string(),
+                    task.clone(),
+                    readme.clone(),
+                    source_files,
+                    test_results,
+                )?;
+                let json_path_name = format!("{}.json", key);
+                let json_path = dir_path.join(json_path_name);
+                std::fs::write(json_path, payload)?;
+            }
+            Err(e) => {
+                println!("❌ ERROR: {}", e);
+                // Still try to create a payload with the error as test results
+                for (name, path) in names.iter().zip(paths.iter()) {
+                    let source_file = parse_source_file(name, path)?;
+                    source_files.push(source_file);
+                }
+                let error_test_results = format!("ERROR: {}", e);
+                let payload = create_payload_json(
+                    key.to_string(),
+                    task.clone(),
+                    readme.clone(),
+                    source_files,
+                    error_test_results,
+                )?;
+                let json_path_name = format!("{}.json", key);
+                let json_path = dir_path.join(json_path_name);
+                std::fs::write(json_path, payload)?;
+            }
         }
-        let payload = create_payload_json(
-            key.to_string(),
-            task.clone(),
-            readme.clone(),
-            source_files,
-            test_results,
-        )?;
-        let json_path_name = format!("{}.json", key);
-        let json_path = dir_path.join(json_path_name);
-        std::fs::write(json_path, payload)?;
     }
     Ok(())
 }
@@ -262,19 +312,31 @@ pub fn run_java_tests(
         }
     }
 
-    // 4. Compile all the java files
-    let compile_status = Command::new("sh")
+    // 4. Compile all the java files - capture output instead of just status
+    let compile_output = Command::new("sh")
         .arg("-c")
         .arg("javac -cp '.:junit-4.12.jar:hamcrest-core-1.3.jar' *.java")
         .current_dir(students_src)
-        .status()?;
+        .output()?;
 
-    if !compile_status.success() {
-        return Err("Java compilation failed".into());
+    if !compile_output.status.success() {
+        // Return compilation error as test results instead of failing
+        let compile_stdout = String::from_utf8_lossy(&compile_output.stdout);
+        let compile_stderr = String::from_utf8_lossy(&compile_output.stderr);
+        return Ok(format!(
+            "COMPILATION FAILED:\n{}\n{}",
+            compile_stdout, compile_stderr
+        ));
     }
 
-    // 5. Find test classes and run the tests
+    // 5. Find test classes and run the tests (only if compilation succeeded)
     let test_classes = find_test_classes(students_src.to_path_buf())?;
+
+    // Check if no test classes were found
+    if test_classes.is_empty() {
+        return Ok("NO TEST CLASSES FOUND: No *Test.java or *Tests.java files were found after compilation.".to_string());
+    }
+
     let run = Command::new("java")
         .arg("-cp")
         .arg(".:junit-4.12.jar:hamcrest-core-1.3.jar")
@@ -282,6 +344,13 @@ pub fn run_java_tests(
         .args(&test_classes)
         .current_dir(students_src)
         .output()?;
+
+    // Check if test execution failed (not just test failures, but execution failure)
+    if !run.status.success() {
+        let stdout = String::from_utf8_lossy(&run.stdout);
+        let stderr = String::from_utf8_lossy(&run.stderr);
+        return Ok(format!("TEST EXECUTION FAILED:\n{}\n{}", stdout, stderr));
+    }
 
     // 6. Return test results (stdout + stderr)
     let stdout = String::from_utf8_lossy(&run.stdout);
