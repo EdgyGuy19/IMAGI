@@ -236,7 +236,9 @@ fn find_test_classes(students_repo: PathBuf) -> Result<Vec<String>, Box<dyn std:
         let path = file.path();
         if path.is_file() {
             if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
-                if filename.ends_with("Test.java") || filename.ends_with("Tests.java") {
+                if (filename.ends_with("Test.java") || filename.ends_with("Tests.java"))
+                    && !filename.ends_with("TextFileTest.java")
+                {
                     // Remove .java extension to get the class name
                     let class_name = filename.trim_end_matches(".java").to_string();
                     test_names.push(class_name);

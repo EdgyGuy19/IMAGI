@@ -143,15 +143,25 @@ setup_virtual_environment() {
     echo "Setting up Python virtual environment..."
 
     # Create virtual environment in AI_api directory if it doesn't exist
-        if [ ! -d "AI_api/venv" ]; then
-            (cd AI_api && python3 -m venv venv) || (cd AI_api && python -m venv venv)
-        fi
+    if [ ! -d "AI_api/venv" ]; then
+        # Try with --upgrade-deps first (newer Python versions)
+        (cd AI_api && python3 -m venv --upgrade-deps venv) || \
+        (cd AI_api && python -m venv --upgrade-deps venv) || \
+        (cd AI_api && python3 -m venv venv) || \
+        (cd AI_api && python -m venv venv)
 
-        # Activate virtual environment
-        source AI_api/venv/bin/activate
+        # Ensure pip is available in the venv
+        if [ ! -f "AI_api/venv/bin/pip" ]; then
+            echo "Installing pip in virtual environment..."
+            AI_api/venv/bin/python -m ensurepip --upgrade
+        fi
+    fi
+
+    # Activate virtual environment
+    source AI_api/venv/bin/activate
 
     # Upgrade pip
-    pip install --upgrade pip
+    python -m pip install --upgrade pip
 
     # Install Python dependencies
     echo "Installing Python packages in virtual environment..."
@@ -173,12 +183,16 @@ configure_environment() {
     JARS_DIR=$(pwd)/jars
     AI_API_DIR=$(pwd)/AI_api
 
-    # Find appropriate shell profile file
+    # Find appropriate shell profile file based on current shell
     SHELL_PROFILE=""
-    if [[ -f "$HOME/.bashrc" ]]; then
+    if [[ "$SHELL" == *"zsh"* ]] && [[ -f "$HOME/.zshrc" ]]; then
+        SHELL_PROFILE="$HOME/.zshrc"
+    elif [[ "$SHELL" == *"bash"* ]] && [[ -f "$HOME/.bashrc" ]]; then
         SHELL_PROFILE="$HOME/.bashrc"
     elif [[ -f "$HOME/.zshrc" ]]; then
         SHELL_PROFILE="$HOME/.zshrc"
+    elif [[ -f "$HOME/.bashrc" ]]; then
+        SHELL_PROFILE="$HOME/.bashrc"
     elif [[ -f "$HOME/.profile" ]]; then
         SHELL_PROFILE="$HOME/.profile"
     fi
@@ -209,12 +223,16 @@ build_and_install_cli() {
     cargo build --release
     cargo install --path .
 
-    # Add cargo bin to PATH in shell profile
+    # Add cargo bin to PATH in shell profile based on current shell
     SHELL_PROFILE=""
-    if [[ -f "$HOME/.bashrc" ]]; then
+    if [[ "$SHELL" == *"zsh"* ]] && [[ -f "$HOME/.zshrc" ]]; then
+        SHELL_PROFILE="$HOME/.zshrc"
+    elif [[ "$SHELL" == *"bash"* ]] && [[ -f "$HOME/.bashrc" ]]; then
         SHELL_PROFILE="$HOME/.bashrc"
     elif [[ -f "$HOME/.zshrc" ]]; then
         SHELL_PROFILE="$HOME/.zshrc"
+    elif [[ -f "$HOME/.bashrc" ]]; then
+        SHELL_PROFILE="$HOME/.bashrc"
     elif [[ -f "$HOME/.profile" ]]; then
         SHELL_PROFILE="$HOME/.profile"
     fi
